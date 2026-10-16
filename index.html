@@ -20,6 +20,7 @@
   --accent:#0F6E63; --accent-ink:#FFFFFF; --up:#C2410C; --down:#15803D;
   --c-mandado:#2F9E5B; --c-agua:#2B87C8; --c-luz:#E0A800; --c-subs:#7C5CE6; --c-gasolina:#E0582B; --c-tarjeta:#D1356E; --c-otros:#7D8B88;
   --c-rest:#B45309; --c-oxxo:#DC2626; --c-trading:#0E7490; --c-seguro:#475569;
+  --c-renta:#6D4C41; --c-internet:#4F46E5; --c-gas:#EA580C; --c-hogar:#65A30D;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   color-scheme:light;
@@ -30,6 +31,7 @@
     --accent:#3FC1AE; --accent-ink:#06201C; --up:#FB8A5B; --down:#4ADE80;
     --c-mandado:#4CC47E; --c-agua:#52A9E8; --c-luz:#F5C542; --c-subs:#A08BFF; --c-gasolina:#FF7E54; --c-tarjeta:#F2629A; --c-otros:#9AABA7;
     --c-rest:#F0A04B; --c-oxxo:#F87171; --c-trading:#22D3EE; --c-seguro:#A3B3C7;
+    --c-renta:#BCAAA4; --c-internet:#A5B4FC; --c-gas:#FB923C; --c-hogar:#A3E635;
     color-scheme:dark;
   }
 }
@@ -38,6 +40,7 @@
   --accent:#3FC1AE; --accent-ink:#06201C; --up:#FB8A5B; --down:#4ADE80;
   --c-mandado:#4CC47E; --c-agua:#52A9E8; --c-luz:#F5C542; --c-subs:#A08BFF; --c-gasolina:#FF7E54; --c-tarjeta:#F2629A; --c-otros:#9AABA7;
     --c-rest:#F0A04B; --c-oxxo:#F87171; --c-trading:#22D3EE; --c-seguro:#A3B3C7;
+    --c-renta:#BCAAA4; --c-internet:#A5B4FC; --c-gas:#FB923C; --c-hogar:#A3E635;
   color-scheme:dark;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -71,8 +74,19 @@ button{cursor:pointer}
 .delta{margin:10px 0 18px;font-size:.95rem;color:var(--ink-2)}
 .delta b{font-weight:700}
 .delta .up{color:var(--up)} .delta .down{color:var(--down)}
-.strip{display:flex;height:56px;border-radius:14px;overflow:hidden;background:var(--surface-2);border:1px solid var(--line)}
-.strip span{min-width:3px;transition:flex-grow .5s ease;position:relative;display:flex;align-items:center;padding-left:10px;color:#fff;font-size:1.25rem;overflow:hidden;white-space:nowrap}
+.strip-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:0 0 8px;flex-wrap:wrap}
+.strip-h h2{margin:0;font-size:1rem;font-weight:700}
+.strip-h small{color:var(--ink-2);font-size:.82rem}
+.strip{display:flex;height:48px;border-radius:14px;overflow:hidden;background:var(--surface-2);border:1px solid var(--line)}
+.strip span{min-width:3px;transition:flex-grow .5s ease;position:relative;display:flex;flex-direction:column;justify-content:center;padding:0 10px;color:var(--si,#fff);overflow:hidden;white-space:nowrap;line-height:1.1}
+.strip span b{font-size:.82rem;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.strip span em{font-style:normal;font-size:.76rem;font-weight:600;opacity:.9}
+.strip-leg{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:6px 28px}
+.strip-leg li{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;align-items:center;font-size:.88rem;padding:3px 0}
+.strip-leg i{width:12px;height:12px;border-radius:4px}
+.strip-leg span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.strip-leg b{font-weight:700}
+.strip-leg em{font-style:normal;color:var(--ink-2);font-size:.8rem;min-width:34px;text-align:right}
 .strip span + span{border-left:2px solid var(--bg)}
 .strip-empty{flex:1;display:flex;align-items:center;padding:0 16px;color:var(--ink-2);font-size:.95rem}
 
@@ -120,6 +134,7 @@ section.grid + section.grid{margin-top:18px}
   background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:16px 24px;font-weight:700;font-size:1.05rem;
   box-shadow:0 10px 30px -8px color-mix(in srgb,var(--accent) 70%,transparent);display:flex;gap:8px;align-items:center;z-index:5}
 .fab span{font-size:1.4rem;line-height:1}
+.fab .fab-t{font-weight:700}
 
 /* Dialogs */
 dialog{border:0;padding:0;background:var(--surface);color:var(--ink);border-radius:24px;width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 40px)}
@@ -289,15 +304,57 @@ select.inp{appearance:auto}
 .pills{display:flex;gap:8px;flex-wrap:wrap}
 details.f > summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 0}
 
+/* Pareja */
+.dlg [hidden]{display:none !important}
+.dlg .who{display:flex;gap:8px}
+.dlg .who[hidden]{display:none}
+.dlg .who button{flex:1;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 10px;font-weight:700;font-size:.9rem;color:var(--ink-2)}
+.dlg .who button[aria-pressed="true"]{border-color:var(--accent);color:var(--ink);background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.sh-info{margin:0;font-size:.84rem;color:var(--ink-2)}
+.sh-info:empty{display:none}
+.pz{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px 14px;border-radius:14px;background:var(--surface-2);margin:0 0 14px;font-size:.88rem}
+.pz:empty{display:none}
+.pz p{margin:0;flex:1 1 220px;color:var(--ink-2)}
+.pz p b{color:var(--ink)}
+.pz.ok{background:color-mix(in srgb,var(--c-subs) 12%,var(--surface))}
+.pz .ghost{flex:none}
+
+/* Casa */
+.cs-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 10px}
+@media (max-width:720px){ .cs-sum{grid-template-columns:1fr 1fr} }
+.cs-sum div{background:var(--surface-2);border-radius:14px;padding:12px 14px}
+.cs-sum small{display:block;color:var(--ink-2);font-size:.8rem;font-weight:600}
+.cs-sum strong{display:block;font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:800;letter-spacing:-.02em}
+.cs-sum em{display:block;font-style:normal;font-size:.76rem;color:var(--ink-2)}
+.cs-sum .due strong{color:var(--up)}
+.cs-puso{margin:0 0 16px;font-size:.88rem;color:var(--ink-2)}
+.cs-puso b{color:var(--ink)}
+.cs-h{margin:18px 0 8px;font-size:.95rem;font-weight:700;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.cs-h small{font-weight:600;color:var(--ink-2);font-size:.8rem}
+.fx .div{grid-column:2 / 4;font-size:.76rem;color:var(--ink-2)}
+.cs-var{display:grid;grid-template-columns:40px 1fr auto;gap:4px 12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px}
+.cs-var + .cs-var{margin-top:8px}
+.cs-var .ico{grid-row:span 3;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:1.2rem}
+.cs-var .nm{font-weight:700}
+.cs-var .am{font-weight:800;text-align:right}
+.cs-var .bar{grid-column:2 / 4}
+.cs-var .meta{grid-column:2 / 3;font-size:.8rem;color:var(--ink-2)}
+.cs-var .meta.over{color:var(--up);font-weight:600}
+.cs-var .add{grid-column:3 / 4;justify-self:end;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.82rem}
+.cs-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+
 /* Secciones en celular */
 .tabbar, .subseg, .atajos, .tj-pick-row{display:none}
 .comp > summary{list-style:none;cursor:pointer}
 .comp > summary::-webkit-details-marker{display:none}
 @media (max-width:899px){
-  .wrap{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+  .wrap{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
   .wrap [data-sec]:not(.on){display:none !important}
   .wrap [data-sub]:not(.sub-on){display:none !important}
-  body:not(.locked) .fab{display:none}
+  body:not(.locked) .fab{width:58px;height:58px;padding:0;justify-content:center;border-radius:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right,0px))}
+  .fab .fab-t{display:none}
+  .fab span{font-size:2rem}
+  body[data-tab="casa"] .top .seg, body[data-tab="casa"] #btnBudget{display:none}
   body[data-tab="tarjetas"] .top .seg, body[data-tab="tarjetas"] .top .nav{display:none}
   body[data-tab="fijos"] .top .seg, body[data-tab="fijos"] #btnBudget{display:none}
   body[data-tab="movs"] #btnBudget{display:none}
@@ -327,6 +384,7 @@ details.f > summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 
   .atajos strong{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
   .atajos em{font-style:normal;font-size:.76rem;color:var(--ink-2)}
   .atajos button.warn em{color:var(--up);font-weight:600}
+  .atajos button:nth-child(3):last-child{grid-column:1 / -1}
   .tj-pick-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 0 12px;padding-bottom:2px}
   .tj-pick-row::-webkit-scrollbar{display:none}
   .tj-pick-row button{flex:none;border:2px solid var(--line);background:var(--surface-2);border-radius:14px;padding:8px 12px;text-align:left;display:grid;gap:1px;position:relative}
@@ -338,7 +396,7 @@ details.f > summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 
   .tj-sum{margin-bottom:12px}
   .comp > summary h3::after{content:" ▾";color:var(--ink-2)}
   .comp:not([open]) > summary h3::after{content:" ▸"}
-  .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(146px + env(safe-area-inset-bottom,0px))}
 }
 
 /* Acceso */
@@ -391,7 +449,9 @@ body.locked .wrap, body.locked .fab{display:none}
     <p class="period" id="periodLabel"></p>
     <p class="total num" id="total"></p>
     <p class="delta" id="delta"></p>
+    <div class="strip-h"><h2 id="stripTitle">¿En qué se fue?</h2><small id="stripSub"></small></div>
     <div class="strip" id="strip" role="img" aria-label="Reparto por categoría"></div>
+    <ul class="strip-leg" id="stripLeg"></ul>
   </section>
 
 
@@ -405,6 +465,15 @@ body.locked .wrap, body.locked .fab{display:none}
     </div>
     <div class="fx-alert" id="fxAlert" role="alert" hidden></div>
     <div id="fxBody"></div>
+  </section>
+
+  <section class="panel fixed" aria-labelledby="csTitle" data-sec="casa">
+    <div class="fx-head">
+      <div><h2 id="csTitle">Casa</h2><p class="sub" id="csSub"></p></div>
+      <div class="hd-act"><button class="ghost" id="btnCasa" hidden>Administrar casa</button></div>
+    </div>
+    <div class="fx-alert" id="csAlert" role="alert" hidden></div>
+    <div id="csBody"></div>
   </section>
 
   <section class="panel fixed" aria-labelledby="tjTitle" data-sec="tarjetas">
@@ -461,16 +530,17 @@ body.locked .wrap, body.locked .fab{display:none}
     <div class="panel" data-sec="resumen" data-sub="pareja">
       <h2>Compartido con tu pareja</h2>
       <p class="sub" id="shSub"></p>
+      <div class="pz" id="pzBox"></div>
       <div id="shBody"></div>
     </div>
   </section>
 </div>
 
-<button class="fab" id="fab"><span>+</span> Agregar gasto</button>
+<button class="fab" id="fab" aria-label="Agregar gasto"><span>+</span><b class="fab-t">Agregar gasto</b></button>
 <nav class="tabbar" id="tabbar" aria-label="Secciones">
   <button data-t="resumen"><span class="ti">📊</span>Resumen</button>
-  <button data-t="movs"><span class="ti">🧾</span>Movimientos</button>
-  <button class="add" id="tabAdd" aria-label="Agregar gasto"><span>+</span></button>
+  <button data-t="movs"><span class="ti">🧾</span>Gastos</button>
+  <button data-t="casa"><span class="ti">🏠</span>Casa</button>
   <button data-t="fijos"><span class="ti">📅</span>Fijos</button>
   <button data-t="tarjetas"><span class="ti">💳</span>Tarjetas</button>
 </nav>
@@ -484,14 +554,14 @@ body.locked .wrap, body.locked .fab{display:none}
     <div class="f" style="display:grid;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink-2)">Categoría
       <div class="chips" id="chips" role="radiogroup" aria-label="Categoría"></div>
     </div>
-    <div class="f" style="display:grid;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink-2)">¿Cómo pagaste?
+    <div class="f" id="fMetBox" style="display:grid;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink-2)">¿Cómo pagaste?
       <div class="chips met" id="metChips" role="radiogroup" aria-label="Método de pago"></div>
     </div>
     <div class="tj-pick" id="fTjWrap" hidden>
       <div class="f" style="display:grid;gap:6px;font-size:.88rem;font-weight:600;color:var(--ink-2)">¿Con qué tarjeta?
         <div class="chips met" id="tjChips" role="radiogroup" aria-label="Tarjeta"></div>
       </div>
-      <label class="check" style="background:var(--surface)"><input type="checkbox" id="fMsi"> Compra a meses sin intereses</label>
+      <label class="check" id="fMsiLbl" style="background:var(--surface)"><input type="checkbox" id="fMsi"> Compra a meses sin intereses</label>
       <div class="row" id="fMsiBox" hidden>
         <label class="f">Meses
           <select class="inp" id="fMsiMeses"><option>3</option><option>6</option><option>9</option><option>12</option><option>18</option><option>24</option></select>
@@ -501,10 +571,15 @@ body.locked .wrap, body.locked .fab{display:none}
     </div>
     <label class="check"><input type="checkbox" id="fShared"> Gasto compartido con mi pareja</label>
     <div class="share" id="fShare" hidden>
+      <div class="who" id="fWho" role="radiogroup" aria-label="¿Quién pagó?" hidden>
+        <button type="button" data-w="yo">Pagué yo</button><button type="button" data-w="pareja" id="fWhoP">Pagó mi pareja</button>
+      </div>
+      <p class="sh-info" id="fShInfo"></p>
+      <label class="check" id="fCasaLbl" style="background:var(--surface)" hidden><input type="checkbox" id="fCasa"> 🏠 Gasto de la casa</label>
       <div class="share-top"><span>¿Cuánto le toca a cada quien?</span><button type="button" class="pill" id="fHalf">Mitad y mitad</button></div>
       <div class="row">
         <label class="f">Mi parte <input class="inp num" id="fMio" inputmode="decimal" placeholder="$0.00"></label>
-        <label class="f">Parte de mi pareja <input class="inp num" id="fPareja" inputmode="decimal" placeholder="$0.00"></label>
+        <label class="f"><span id="fParejaTxt">Parte de mi pareja</span> <input class="inp num" id="fPareja" inputmode="decimal" placeholder="$0.00"></label>
       </div>
       <div class="split" aria-hidden="true"><i class="me" id="fBarMe"></i><i class="pa" id="fBarPa"></i></div>
     </div>
@@ -633,6 +708,70 @@ body.locked .wrap, body.locked .fab{display:none}
   </form>
 </dialog>
 
+<dialog id="dlgP">
+  <form class="dlg" method="dialog" id="formP" novalidate>
+    <h3>Vincular con tu pareja</h3>
+    <p class="sub" style="margin:0;color:var(--ink-2);font-size:.9rem">Escribe el correo con el que tu pareja entra a la app. Ella debe hacer lo mismo con tu correo desde su cuenta; cuando los dos se agreguen, los gastos divididos aparecerán en ambas cuentas.</p>
+    <label class="f">Correo de tu pareja <input class="inp" id="pEmail" type="email" inputmode="email" autocapitalize="off" autocomplete="off" placeholder="correo@ejemplo.com"></label>
+    <p class="sub" id="pMio" style="margin:0;color:var(--ink-2);font-size:.85rem"></p>
+    <p class="err" id="pErr"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="pDel" hidden>Desvincular</button>
+      <button type="button" class="btn plain" id="pCancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="pSave">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgC">
+  <form class="dlg" method="dialog" id="formC" novalidate>
+    <h3>Gastos de la casa</h3>
+    <p class="sub" style="margin:-6px 0 0;color:var(--ink-2);font-size:.88rem">Lo que cambies aquí lo ven los dos. Toca uno para editarlo.</p>
+    <div class="fm-list" id="cList"></div>
+    <div class="who" id="cTipo" role="radiogroup" aria-label="Tipo">
+      <button type="button" data-t="fijo">Pago fijo</button><button type="button" data-t="variable">Presupuesto variable</button>
+    </div>
+    <p class="sh-info" id="cTipoInfo"></p>
+    <label class="f">Nombre <input class="inp" id="cNombre" maxlength="40" placeholder="Ej. Renta, Internet, Mandado"></label>
+    <div class="row">
+      <label class="f"><span id="cMontoTxt">Monto mensual</span> <input class="inp num" id="cMonto" inputmode="decimal" placeholder="$0.00"></label>
+      <label class="f" id="cDiaLbl" style="flex:0 1 120px">Día de pago <input class="inp num" id="cDia" type="number" min="1" max="31" inputmode="numeric"></label>
+    </div>
+    <div class="row">
+      <label class="f">Categoría <select class="inp" id="cCat"></select></label>
+      <label class="f" style="flex:0 1 120px">Tu parte (%) <input class="inp num" id="cPct" type="number" min="0" max="100" inputmode="numeric"></label>
+    </div>
+    <p class="sh-info" id="cPctInfo"></p>
+    <p class="err" id="cErr"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="cDel" hidden>Eliminar</button>
+      <button type="button" class="btn plain" id="cClose">Cerrar</button>
+      <button type="submit" class="btn primary" id="cSave">Agregar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgCP">
+  <form class="dlg" method="dialog" id="formCP" novalidate>
+    <h3 id="cpTitle">Pagar</h3>
+    <label class="f">Monto que se pagó <input class="inp big num" id="cpMonto" inputmode="decimal" autocomplete="off" placeholder="$0.00"></label>
+    <div class="who" id="cpWho" role="radiogroup" aria-label="¿Quién pagó?">
+      <button type="button" data-w="yo">Pagué yo</button><button type="button" data-w="pareja" id="cpWhoP">Pagó mi pareja</button>
+    </div>
+    <div class="row">
+      <label class="f" id="cpMetLbl">Se pagó con <select class="inp" id="cpMet"></select></label>
+      <label class="f">Fecha <input class="inp" type="date" id="cpFecha"></label>
+    </div>
+    <p class="sh-info" id="cpInfo"></p>
+    <p class="err" id="cpErr"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="cpDel" hidden>Quitar pago</button>
+      <button type="button" class="btn plain" id="cpCancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="cpSave">Guardar pago</button>
+    </div>
+  </form>
+</dialog>
+
 <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo" hidden>Deshacer</button></div>
 
 <script>
@@ -641,8 +780,12 @@ const CATS = [
   {id:'mandado', name:'Mandado', ico:'🛒', v:'--c-mandado'},
   {id:'restaurantes', name:'Restaurantes', ico:'🍽️', v:'--c-rest'},
   {id:'oxxo', name:'OXXO / conveniencia', ico:'🏪', v:'--c-oxxo'},
+  {id:'renta', name:'Renta', ico:'🏠', v:'--c-renta'},
   {id:'agua', name:'Agua', ico:'💧', v:'--c-agua'},
   {id:'luz', name:'Luz', ico:'💡', v:'--c-luz'},
+  {id:'internet', name:'Internet', ico:'🌐', v:'--c-internet'},
+  {id:'gas', name:'Gas', ico:'🔥', v:'--c-gas'},
+  {id:'hogar', name:'Limpieza y hogar', ico:'🧽', v:'--c-hogar'},
   {id:'subs', name:'Suscripciones', ico:'📱', v:'--c-subs'},
   {id:'gasolina', name:'Gasolina', ico:'⛽', v:'--c-gasolina'},
   {id:'seguro', name:'Seguro auto', ico:'🛡️', v:'--c-seguro'},
@@ -658,6 +801,7 @@ const METODOS = [
   {id:'transferencia', name:'Transferencia', ico:'📲'},
 ];
 const MET = Object.fromEntries(METODOS.map(m => [m.id, m]));
+MET.pareja = {id:'pareja', name:'Pagó tu pareja', ico:'👥'};
 const LS_KEY = 'mis-gastos-v1';
 
 // norm conserva cualquier clave que no conozca, para que ninguna versión borre datos de otra
@@ -672,7 +816,8 @@ const norm = (d = {}) => ({
 });
 let state = norm({});
 let vista = 'mes';
-const resumen = { fijos: null, tj: null };
+const resumen = { fijos: null, tj: null, casa: null };
+let casa = null, casaEstado = 'cargando';
 let ancla = new Date();
 
 // ---------- utils ----------
@@ -699,8 +844,21 @@ function addP(v, d, n){
   return r;
 }
 const rango = (v, d) => { const s = startOf(v, d); return [s, addP(v, s, 1)]; };
-const enRango = (s, e) => state.gastos.filter(g => { const f = parse(g.fecha); return f >= s && f < e; });
-const suma = arr => arr.reduce((a,g) => a + g.monto, 0);
+// ---------- pareja: gastos compartidos sincronizados ----------
+let tCasa = null;
+let pareja = null, miVinculo = null, miEmail = '', compEstado = 'cargando', compRows = [], compG = [], canalComp = null, tComp = null;
+const cuenta = g => g.compartido ? (+g.compartido.mio || 0) : g.monto;   // cada quien cuenta solo su parte
+const G = () => compG.length ? state.gastos.concat(compG) : state.gastos;
+const nombrePareja = () => pareja ? pareja.email.split('@')[0] : 'tu pareja';
+const vinculado = () => compEstado === 'ok' && !!pareja;
+function aGasto(r){
+  const soyA = r.user_a === userId, pague = r.pagado_por === userId;
+  return { id: 'sh:' + r.id, shId: r.id, row: r, shared: true, pague, monto: +r.monto, cat: r.cat, fecha: r.fecha, nota: r.nota || '',
+    metodo: pague ? (r.metodo || null) : 'pareja', tarjetaId: pague ? (r.tarjeta_id || null) : null,
+    compartido: { mio: +(soyA ? r.parte_a : r.parte_b), pareja: +(soyA ? r.parte_b : r.parte_a) }, creado: Date.parse(r.creado) || 0 };
+}
+const enRango = (s, e) => G().filter(g => { const f = parse(g.fecha); return f >= s && f < e; });
+const suma = arr => arr.reduce((a,g) => a + cuenta(g), 0);
 const fmtD = (d, o) => d.toLocaleDateString('es-MX', o);
 
 function etiqueta(v, s, e){
@@ -795,17 +953,57 @@ function escuchar(){
     .subscribe();
 }
 
+const compKey = () => `${LS_KEY}:${userId}:compartidos`;
+const casaKey = () => `${LS_KEY}:${userId}:casa`;
+function setComp(rows){
+  compRows = Array.isArray(rows) ? rows : [];
+  compG = compRows.map(aGasto);
+  try { localStorage.setItem(compKey(), JSON.stringify(compRows)); } catch(e){}
+}
+const faltaTabla = e => e && (['PGRST205','PGRST202','42P01','42883'].includes(e.code) || /does not exist|Could not find/i.test(e.message || ''));
+async function traerCompartidos(){
+  if (!sb || !userId) return;
+  const [p, v, c] = await Promise.all([
+    sb.rpc('mi_pareja'),
+    sb.from('parejas').select('pareja_email').eq('user_id', userId).maybeSingle(),
+    sb.from('gastos_compartidos').select('*').order('fecha', { ascending: false }).limit(5000),
+  ]);
+  if (faltaTabla(p.error) || faltaTabla(c.error)) { compEstado = 'sin-tablas'; pareja = null; render(); return; }
+  if (p.error || v.error || c.error) { if (compEstado === 'cargando') compEstado = 'sin-red'; render(); return; }
+  compEstado = 'ok';
+  pareja = (p.data && p.data[0]) || null;
+  miVinculo = v.data ? v.data.pareja_email : null;
+  setComp(c.data);
+  render();
+  traerCasa();
+}
+function escucharComp(){
+  if (canalComp) sb.removeChannel(canalComp);
+  canalComp = sb.channel('compartidos-' + userId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'gastos_compartidos' }, () => {
+      clearTimeout(tComp); tComp = setTimeout(traerCompartidos, 400);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'casa' }, () => {
+      clearTimeout(tCasa); tCasa = setTimeout(traerCasa, 400);
+    })
+    .subscribe();
+}
+
 async function entrarComo(user){
   if (userId === user.id) return;
-  userId = user.id;
+  userId = user.id; miEmail = (user.email || '').toLowerCase();
   $('#whoEmail').textContent = user.email || '';
   document.body.classList.remove('locked'); $('#auth').hidden = true;
   state = norm({});
   try { const raw = localStorage.getItem(cacheKey()); if (raw) state = norm(JSON.parse(raw)); } catch(e){}
+  compEstado = 'cargando'; pareja = null; miVinculo = null; setComp([]); casa = null; casaEstado = 'cargando';
+  try { const rc = localStorage.getItem(compKey()); if (rc) setComp(JSON.parse(rc)); } catch(e){}
+  try { const rk = localStorage.getItem(casaKey()); if (rk) casa = JSON.parse(rk); } catch(e){}
   render();
   setSync('Sincronizando…');
   await traerNube();
   escuchar();
+  traerCompartidos(); escucharComp();
 }
 
 function mostrarAcceso(msg){
@@ -850,7 +1048,10 @@ $('#logout').addEventListener('click', async () => {
   if (hayPendiente() && !confirm('Hay cambios sin subir a la nube (sin conexión). Si sales, se quedan solo en este dispositivo. ¿Salir de todos modos?')) return;
   // Borra la copia local de este usuario para que nadie más la vea en este dispositivo (si ya está en la nube)
   if (!hayPendiente()){ try { localStorage.removeItem(cacheKey()); localStorage.removeItem(LS_KEY); } catch(e){} }
-  state = norm({}); render();
+  try { localStorage.removeItem(compKey()); localStorage.removeItem(casaKey()); } catch(e){}
+  casa = null;
+  if (canalComp){ sb.removeChannel(canalComp); canalComp = null; }
+  state = norm({}); compRows = []; compG = []; pareja = null; miVinculo = null; render();
   await sb.auth.signOut();
 });
 
@@ -871,7 +1072,7 @@ async function connectCloud(){
   const { data } = await sb.auth.getSession();
   if (data.session) entrarComo(data.session.user); else mostrarAcceso();
   window.addEventListener('online', () => { if (hayPendiente()) persist(); });
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && userId) traerNube(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && userId){ traerNube(); traerCompartidos(); } });
 }
 
 // ---------- charts ----------
@@ -991,17 +1192,32 @@ function render(){
   }
 
   const porCat = Object.fromEntries(CATS.map(c => [c.id, 0]));
-  lista.forEach(g => { porCat[g.cat] = (porCat[g.cat]||0) + g.monto; });
+  lista.forEach(g => { porCat[g.cat] = (porCat[g.cat]||0) + cuenta(g); });
 
   // strip
   const strip = $('#strip'); strip.innerHTML = '';
+  const leg = $('#stripLeg'); leg.innerHTML = '';
+  const tintaSobre = v => { const h = css(v).replace('#',''); if (h.length !== 6) return '#fff';
+    const [r,g,b] = [0,2,4].map(i => parseInt(h.slice(i,i+2),16)/255).map(x => x <= .03928 ? x/12.92 : ((x+.055)/1.055)**2.4);
+    return (0.2126*r + 0.7152*g + 0.0722*b) > .32 ? '#16282A' : '#fff'; };
+  const conGasto = CATS.filter(c => porCat[c.id] > 0).sort((a,b) => porCat[b.id]-porCat[a.id]);
+  $('#stripSub').textContent = total > 0 ? `${conGasto.length} ${conGasto.length === 1 ? 'categoría' : 'categorías'} este ${periodWord[vista]}` : '';
   if (total > 0){
-    CATS.filter(c => porCat[c.id] > 0).sort((a,b) => porCat[b.id]-porCat[a.id]).forEach(c => {
+    conGasto.forEach(c => {
+      const pct = porCat[c.id] / total;
       const sp = document.createElement('span');
       sp.style.flexGrow = porCat[c.id]; sp.style.flexBasis = 0; sp.style.background = `var(${c.v})`;
-      sp.title = `${c.name}: ${money.format(porCat[c.id])}`;
-      sp.textContent = porCat[c.id]/total > .07 ? c.ico : '';
+      sp.style.setProperty('--si', tintaSobre(c.v));
+      sp.title = `${c.name}: ${money.format(porCat[c.id])} (${Math.round(pct*100)}%)`;
+      if (pct >= .2){ sp.innerHTML = '<b></b><em></em>'; sp.querySelector('b').textContent = c.name; sp.querySelector('em').textContent = Math.round(pct*100) + '%'; }
+      else if (pct >= .08){ sp.innerHTML = '<em></em>'; sp.querySelector('em').textContent = Math.round(pct*100) + '%'; }
       strip.append(sp);
+      const li = document.createElement('li');
+      li.innerHTML = `<i style="background:var(${c.v})"></i><span></span><b class="num"></b><em class="num"></em>`;
+      li.querySelector('span').textContent = `${c.ico} ${c.name}`;
+      li.querySelector('b').textContent = money.format(porCat[c.id]);
+      li.querySelector('em').textContent = (pct < .01 ? '<1' : Math.round(pct*100)) + '%';
+      leg.append(li);
     });
   } else {
     strip.append(Object.assign(document.createElement('div'), {className:'strip-empty', textContent:`Sin gastos este ${periodWord[vista]}. Agrega el primero con el botón de abajo.`}));
@@ -1056,7 +1272,7 @@ function render(){
         b.innerHTML = `<span class="dot" style="background:color-mix(in srgb, var(${c.v}) 18%, transparent)">${c.ico}</span>
           <span class="txt"><b></b><small></small></span><span class="m num"></span>`;
         b.querySelector('b').textContent = g.nota || c.name;
-        if (g.compartido) b.querySelector('b').append(Object.assign(document.createElement('span'), {className:'tag', textContent:'👥 compartido'}));
+        if (g.compartido) b.querySelector('b').append(Object.assign(document.createElement('span'), {className:'tag', textContent: g.shared ? (g.row && g.row.casa ? '🏠 casa' : `👥 con ${nombrePareja()}`) : '👥 compartido'}));
         const partes = [];
         if (g.nota) partes.push(c.name);
         const tjG = g.tarjetaId && state.tarjetas.find(t => t.id === g.tarjetaId);
@@ -1072,9 +1288,9 @@ function render(){
   }
 
   // métodos
-  const porMet = {}; lista.forEach(g => { const k = g.metodo || 'sin'; porMet[k] = (porMet[k]||0) + g.monto; });
+  const porMet = {}; lista.forEach(g => { const k = g.metodo || 'sin'; porMet[k] = (porMet[k]||0) + cuenta(g); });
   const metsUl = $('#mets'); metsUl.innerHTML = '';
-  const metRows = [...METODOS, {id:'sin', name:'Sin especificar', ico:'❔'}].filter(m => m.id !== 'sin' || porMet.sin);
+  const metRows = [...METODOS, MET.pareja, {id:'sin', name:'Sin especificar', ico:'❔'}].filter(m => (m.id !== 'sin' && m.id !== 'pareja') || porMet[m.id]);
   const maxMet = Math.max(...metRows.map(m => porMet[m.id]||0), 1);
   metRows.forEach(m => {
     const v = porMet[m.id] || 0;
@@ -1088,6 +1304,7 @@ function render(){
   });
 
   // compartido
+  renderPareja();
   const comp = lista.filter(g => g.compartido);
   const shBody = $('#shBody'); shBody.innerHTML = '';
   if (!comp.length){
@@ -1099,12 +1316,14 @@ function render(){
     const tot = mio + pa;
     $('#shSub').textContent = `${comp.length} ${comp.length===1?'gasto':'gastos'} · ${money.format(tot)} en total`;
     const pair = document.createElement('div'); pair.className = 'pair';
-    pair.innerHTML = `<div><small>Tu parte</small><strong class="num"></strong></div><div><small>Parte de tu pareja</small><strong class="num"></strong></div>`;
+    pair.innerHTML = `<div><small>Tu parte</small><strong class="num"></strong></div><div><small></small><strong class="num"></strong></div>`;
+    pair.querySelectorAll('small')[1].textContent = pareja ? `Parte de ${nombrePareja()}` : 'Parte de tu pareja';
     const st = pair.querySelectorAll('strong'); st[0].textContent = money.format(mio); st[1].textContent = money.format(pa);
     const sp = document.createElement('div'); sp.className = 'split'; sp.style.height = '14px'; sp.style.marginBottom = '8px';
     sp.innerHTML = `<i class="me" style="width:${tot?mio/tot*100:50}%"></i><i class="pa" style="width:${tot?pa/tot*100:50}%"></i>`;
     const lg = document.createElement('div'); lg.className = 'fx-legend'; lg.style.margin = '0 0 14px';
-    lg.innerHTML = `<span style="--sw:var(--accent)">Tú ${tot?Math.round(mio/tot*100):0}%</span><span style="--sw:var(--c-subs)">Tu pareja ${tot?Math.round(pa/tot*100):0}%</span>`;
+    lg.innerHTML = `<span style="--sw:var(--accent)">Tú ${tot?Math.round(mio/tot*100):0}%</span><span style="--sw:var(--c-subs)"></span>`;
+    lg.lastElementChild.textContent = `${pareja ? nombrePareja() : 'Tu pareja'} ${tot?Math.round(pa/tot*100):0}%`;
     shBody.append(pair, sp, lg);
     const porC = {}; comp.forEach(g => { porC[g.cat] = (porC[g.cat]||0) + g.monto; });
     const ul2 = document.createElement('ul'); ul2.className = 'cats';
@@ -1120,6 +1339,7 @@ function render(){
   }
 
   renderFijos();
+  renderCasa();
   renderTarjetas();
   renderAtajos();
   aplicarSecciones();
@@ -1128,7 +1348,8 @@ function render(){
 }
 
 // ---------- dialog: gasto ----------
-let editando = null, catSel = 'mandado', metSel = 'efectivo', tjSel = null;
+let editando = null, catSel = 'mandado', metSel = 'efectivo', tjSel = null, quien = 'yo', pctInicial = 50;
+const pagaPareja = () => $('#fShared').checked && vinculado() && quien === 'pareja';
 const dlg = $('#dlg');
 function pintarChips(){
   const ch = $('#chips'); ch.innerHTML = '';
@@ -1157,7 +1378,9 @@ function pintarMet(){
 }
 function pintarTj(){
   const wrap = $('#fTjWrap');
-  wrap.hidden = !(metSel === 'credito' && state.tarjetas.length);
+  wrap.hidden = !(metSel === 'credito' && state.tarjetas.length) || pagaPareja();
+  const sinMsi = $('#fShared').checked && vinculado();
+  $('#fMsiLbl').hidden = sinMsi; if (sinMsi) $('#fMsi').checked = false;
   if (wrap.hidden) return;
   if (!state.tarjetas.some(t => t.id === tjSel)) tjSel = state.tarjetas[0].id;
   const ch = $('#tjChips'); ch.innerHTML = '';
@@ -1189,36 +1412,51 @@ function barraSplit(){
   $('#fBarPa').style.width = (t ? pa/t*100 : 50) + '%';
 }
 function mitad(){
-  const m = montoForm(); const mi = r2(m/2);
+  const m = montoForm(); const mi = r2(m * pctInicial / 100);
   $('#fMio').value = m ? mi : ''; $('#fPareja').value = m ? r2(m - mi) : ''; barraSplit();
 }
+function pintarShare(){
+  const on = $('#fShared').checked, v = vinculado();
+  $('#fShare').hidden = !on;
+  $('#fWho').hidden = !(on && v);
+  $('#fWhoP').textContent = `Pagó ${nombrePareja()}`;
+  $('#fWho').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.w === quien));
+  $('#fParejaTxt').textContent = v ? `Parte de ${nombrePareja()}` : 'Parte de mi pareja';
+  $('#fShInfo').textContent = !on ? '' : v ? `Se guarda en las dos cuentas (${pareja.email}).`
+    : compEstado === 'ok' ? 'Solo se guarda en tu cuenta. Vincula a tu pareja en “Compartido” para que también lo vea ella.' : '';
+  $('#fMetBox').hidden = pagaPareja();
+  $('#fCasaLbl').hidden = !(on && v && casaEstado === 'ok');
+  pintarTj();
+}
+$('#fWho').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { quien = b.dataset.w; pintarShare(); }));
 $('#fShared').addEventListener('change', e => {
-  $('#fShare').hidden = !e.target.checked;
   if (e.target.checked && !$('#fMio').value) mitad();
+  pintarShare();
 });
-$('#fHalf').addEventListener('click', mitad);
+$('#fHalf').addEventListener('click', () => { pctInicial = 50; mitad(); });
 $('#fMio').addEventListener('input', () => { const m = montoForm(), mi = num($('#fMio').value); if (m && mi >= 0 && mi <= m) $('#fPareja').value = r2(m - mi); barraSplit(); });
 $('#fPareja').addEventListener('input', () => { const m = montoForm(), pa = num($('#fPareja').value); if (m && pa >= 0 && pa <= m) $('#fMio').value = r2(m - pa); barraSplit(); });
 $('#fMonto').addEventListener('input', () => {
   if (!$('#fShared').checked) return;
   const m = montoForm(), mi = num($('#fMio').value), pa = num($('#fPareja').value), prev = (mi||0) + (pa||0);
   if (!m) return;
-  const ratio = prev > 0 ? (mi||0)/prev : .5;
+  const ratio = prev > 0 ? (mi||0)/prev : pctInicial / 100;
   const nmi = r2(m*ratio); $('#fMio').value = nmi; $('#fPareja').value = r2(m - nmi); barraSplit();
 });
 
-function abrir(g){
-  editando = g || null;
+function abrir(g, preset){
+  editando = g || null; pctInicial = preset && preset.pct != null ? preset.pct : 50;
   $('#dlgTitle').textContent = g ? 'Editar gasto' : 'Nuevo gasto';
   $('#fSave').textContent = g ? 'Guardar cambios' : 'Guardar gasto';
-  $('#fDel').hidden = !g; $('#fDup').hidden = !g;
+  $('#fDel').hidden = !g; $('#fDup').hidden = !g || !!g.shared;
   $('#fMonto').value = g ? String(g.monto) : '';
   $('#fNota').value = g ? (g.nota||'') : '';
   const hoy = new Date();
   const [s, e] = rango(vista, ancla);
   $('#fFecha').value = g ? g.fecha : (hoy >= s && hoy < e ? iso(hoy) : iso(s));
   catSel = g ? g.cat : catSel;
-  metSel = g ? (g.metodo || metSel) : metSel;
+  metSel = g && g.metodo && g.metodo !== 'pareja' ? g.metodo : metSel;
+  quien = g && g.shared && !g.pague ? 'pareja' : 'yo';
   const sh = !!(g && g.compartido);
   $('#fShared').checked = sh; $('#fShare').hidden = !sh;
   $('#fMio').value = sh ? g.compartido.mio : ''; $('#fPareja').value = sh ? g.compartido.pareja : '';
@@ -1230,14 +1468,19 @@ function abrir(g){
     if (![...sel.options].some(o => +o.value === g.msiMeses)) sel.append(new Option(g.msiMeses, g.msiMeses));
     sel.value = String(g.msiMeses);
   }
+  $('#fCasa').checked = !!(g && g.row && g.row.casa);
+  if (preset){
+    catSel = preset.cat || catSel; quien = 'yo';
+    if (preset.casa && vinculado()){ $('#fShared').checked = true; $('#fCasa').checked = true; $('#fMio').value = ''; $('#fPareja').value = ''; }
+  }
   $('#fErr').textContent = '';
-  pintarChips(); pintarMet(); pintarTj();
+  pintarChips(); pintarMet(); pintarShare();
   dlg.showModal();
   if (!g) setTimeout(() => $('#fMonto').focus(), 50);
 }
 $('#fab').addEventListener('click', () => abrir());
 $('#fCancel').addEventListener('click', () => dlg.close());
-$('#form').addEventListener('submit', ev => {
+$('#form').addEventListener('submit', async ev => {
   ev.preventDefault();
   const monto = parseFloat($('#fMonto').value.replace(/[$,\s]/g,''));
   if (!(monto > 0)){ $('#fErr').textContent = 'Escribe un monto mayor a cero, por ejemplo 350.50'; $('#fMonto').focus(); return; }
@@ -1254,6 +1497,53 @@ $('#form').addEventListener('submit', ev => {
   }
   const tarjetaId = metSel === 'credito' && state.tarjetas.some(t => t.id === tjSel) ? tjSel : null;
   const msiMeses = tarjetaId && $('#fMsi').checked ? parseInt($('#fMsiMeses').value, 10) : null;
+
+  // Gasto compartido sincronizado (o uno que deja de serlo)
+  if ((compartido && vinculado()) || (editando && editando.shared)){
+    const btn = $('#fSave'); btn.disabled = true; $('#fErr').textContent = '';
+    try {
+      if (editando && editando.shared && !compartido){
+        const { error } = await sb.from('gastos_compartidos').delete().eq('id', editando.shId); if (error) throw error;
+        setComp(compRows.filter(r => r.id !== editando.shId));
+        state.gastos = [...state.gastos, {id:uid(), monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido:null, tarjetaId, msiMeses, creado:Date.now()}];
+        persist();
+        toast('Ya no es compartido: quedó solo en tu cuenta');
+      } else {
+        const viejo = editando && editando.shared ? editando : null;
+        const base = viejo ? viejo.row : { id: 'c' + uid() + uid(), user_a: userId, user_b: pareja.id };
+        const soyA = base.user_a === userId, otro = soyA ? base.user_b : base.user_a, pagoYo = quien === 'yo';
+        const cambios = { monto: m, fecha, cat: catSel, nota,
+          parte_a: soyA ? compartido.mio : compartido.pareja, parte_b: soyA ? compartido.pareja : compartido.mio,
+          pagado_por: pagoYo ? userId : otro,
+          metodo: pagoYo ? metSel : (viejo && !viejo.pague ? base.metodo : null),
+          tarjeta_id: pagoYo ? tarjetaId : (viejo && !viejo.pague ? base.tarjeta_id : null),
+          updated_at: new Date().toISOString(),
+          ...(casaEstado === 'ok' ? { casa: $('#fCasa').checked, casa_concepto: $('#fCasa').checked ? (base.casa_concepto || null) : null } : {}) };
+        let row;
+        if (viejo){
+          const { error } = await sb.from('gastos_compartidos').update(cambios).eq('id', base.id); if (error) throw error;
+          row = { ...base, ...cambios };
+        } else {
+          row = { ...base, ...cambios };
+          const { error } = await sb.from('gastos_compartidos').insert(row); if (error) throw error;
+          row.creado = new Date().toISOString();
+          if (editando){ state.gastos = state.gastos.filter(g => g.id !== editando.id); persist(); }
+        }
+        setComp([row, ...compRows.filter(r => r.id !== row.id)]);
+        toast(viejo ? 'Cambios guardados en las dos cuentas' : `Compartido con ${nombrePareja()}: tu parte ${money.format(compartido.mio)}`);
+      }
+    } catch (err) {
+      btn.disabled = false;
+      $('#fErr').textContent = navigator.onLine === false ? 'Sin internet: los gastos compartidos necesitan conexión para guardarse.'
+        : 'No se pudo guardar el gasto compartido. Revisa que el vínculo con tu pareja siga activo.';
+      return;
+    }
+    btn.disabled = false; dlg.close();
+    const f = parse(fecha); const [s,e] = rango(vista, ancla);
+    if (f < s || f >= e) ancla = f;
+    render(); return;
+  }
+
   if (editando){
     state.gastos = state.gastos.map(g => g.id === editando.id ? {...g, monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido, tarjetaId, msiMeses} : g);
     toast('Cambios guardados');
@@ -1266,7 +1556,14 @@ $('#form').addEventListener('submit', ev => {
   if (f < s || f >= e) ancla = f;
   render(); persist();
 });
-$('#fDel').addEventListener('click', () => {
+$('#fDel').addEventListener('click', async () => {
+  if (editando && editando.shared){
+    if (!confirm(`Este gasto se borrará también de la cuenta de ${nombrePareja()}. ¿Eliminar?`)) return;
+    const { error } = await sb.from('gastos_compartidos').delete().eq('id', editando.shId);
+    if (error){ $('#fErr').textContent = 'No se pudo eliminar. Revisa tu conexión y el vínculo con tu pareja.'; return; }
+    setComp(compRows.filter(r => r.id !== editando.shId)); dlg.close(); render(); toast('Gasto compartido eliminado');
+    return;
+  }
   const quitado = editando;
   state.gastos = state.gastos.filter(g => g.id !== quitado.id);
   dlg.close(); render(); persist();
@@ -1277,6 +1574,53 @@ $('#fDup').addEventListener('click', () => {
   state.gastos = [...state.gastos, {...g, id:uid(), fecha:iso(new Date()), creado:Date.now()}];
   dlg.close(); ancla = new Date(); render(); persist();
   toast(`Repetido hoy: ${money.format(g.monto)}`);
+});
+
+// ---------- vínculo con la pareja ----------
+function renderPareja(){
+  const box = $('#pzBox'); box.innerHTML = ''; box.className = 'pz';
+  if (!userId) return;
+  const p = document.createElement('p'); let btn = null;
+  if (compEstado === 'sin-tablas'){ p.textContent = 'Para sincronizar con tu pareja falta activar la función en Supabase (archivo 3_pareja_compartidos.sql).'; }
+  else if (compEstado === 'cargando'){ p.textContent = 'Revisando el vínculo con tu pareja…'; }
+  else if (compEstado === 'sin-red' && !pareja){ p.textContent = 'Sin conexión: no se pudo revisar el vínculo con tu pareja.'; }
+  else if (pareja){
+    box.classList.add('ok');
+    p.append('Sincronizado con ', Object.assign(document.createElement('b'), {textContent: pareja.email}), '. Lo que dividan aparece en las dos cuentas.');
+    btn = 'Cambiar';
+  } else if (miVinculo){
+    p.append('Esperando a que ', Object.assign(document.createElement('b'), {textContent: miVinculo}), ` te agregue desde su cuenta con tu correo (${miEmail}).`);
+    btn = 'Cambiar';
+  } else { p.textContent = 'Vincula la cuenta de tu pareja para ver juntos los gastos que dividen.'; btn = 'Vincular pareja'; }
+  box.append(p);
+  if (btn){ const b = Object.assign(document.createElement('button'), {type:'button', className:'ghost', textContent: btn}); b.addEventListener('click', abrirPareja); box.append(b); }
+}
+const dlgP = $('#dlgP');
+function abrirPareja(){
+  $('#pEmail').value = miVinculo || ''; $('#pErr').textContent = '';
+  $('#pMio').textContent = `Tu correo para que ella te agregue: ${miEmail}`;
+  $('#pDel').hidden = !miVinculo;
+  dlgP.showModal();
+}
+$('#pCancel').addEventListener('click', () => dlgP.close());
+$('#formP').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const email = $('#pEmail').value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $('#pErr').textContent = 'Escribe un correo válido'; return; }
+  if (email === miEmail){ $('#pErr').textContent = 'Ese es tu propio correo; escribe el de tu pareja'; return; }
+  $('#pSave').disabled = true;
+  const { error } = await sb.from('parejas').upsert({ user_id: userId, pareja_email: email, updated_at: new Date().toISOString() });
+  $('#pSave').disabled = false;
+  if (error){ $('#pErr').textContent = faltaTabla(error) ? 'Falta correr el archivo 3_pareja_compartidos.sql en Supabase.' : 'No se pudo guardar. Revisa tu conexión.'; return; }
+  miVinculo = email; dlgP.close();
+  await traerCompartidos();
+  toast(pareja ? `Vinculados con ${pareja.email} ✓` : `Listo. Ahora pide que te agregue con tu correo ${miEmail}`);
+});
+$('#pDel').addEventListener('click', async () => {
+  if (!confirm('¿Desvincular? Ya no podrán agregar ni editar gastos compartidos (el historial se conserva).')) return;
+  const { error } = await sb.from('parejas').delete().eq('user_id', userId);
+  if (error){ $('#pErr').textContent = 'No se pudo desvincular. Revisa tu conexión.'; return; }
+  miVinculo = null; pareja = null; dlgP.close(); await traerCompartidos(); toast('Desvinculado');
 });
 
 // ---------- dialog: presupuestos ----------
@@ -1531,7 +1875,7 @@ function simular(t, hoy = hoy0()){
     .map(m => ({ ...m, hechos: m.facturados || 0, saldo: m.saldoRef, cRef: parse(m.corteRef) }))
     .filter(m => m.hechos < m.total && m.saldo > 0.005);
   const ev = [];
-  state.gastos.forEach(g => {
+  G().forEach(g => {
     if (g.tarjetaId !== t.id || g.msiMeses > 1) return;
     const f = parse(g.fecha); if (f > c && f <= hoy) ev.push({ f, tipo: 'cargo', monto: g.monto, g });
   });
@@ -1705,7 +2049,7 @@ function panelTarjeta(t, s){
     b.querySelector('small.r').textContent = `saldo ${money.format(m.saldo)} de ${money0.format(m.original)}`;
     b.querySelector('.mini i').style.width = (m.hechos / m.total * 100) + '%';
     b.addEventListener('click', () => {
-      if (m.gastoId){ const g = state.gastos.find(x => x.id === m.gastoId); if (g) abrir(g); }
+      if (m.gastoId){ const g = G().find(x => x.id === m.gastoId); if (g) abrir(g); }
       else abrirMsi(t, m, s);
     });
     dm.append(b);
@@ -1925,6 +2269,298 @@ $('#mDel').addEventListener('click', () => {
   toast('Compra a meses eliminada', () => { state.tarjetas = state.tarjetas.map(t => t.id === tid ? {...t, msi: [...(t.msi || []), quitado]} : t); render(); persist(); });
 });
 
+// ---------- casa (compartida con la pareja) ----------
+const CASA_BASE = [
+  {nombre:'Renta', cat:'renta', tipo:'fijo', dia:1}, {nombre:'Luz', cat:'luz', tipo:'fijo', dia:15},
+  {nombre:'Agua', cat:'agua', tipo:'fijo', dia:10}, {nombre:'Internet', cat:'internet', tipo:'fijo', dia:5},
+  {nombre:'Gas', cat:'gas', tipo:'fijo', dia:20}, {nombre:'Mandado', cat:'mandado', tipo:'variable'},
+  {nombre:'Limpieza y hogar', cat:'hogar', tipo:'variable'},
+];
+const casaParId = () => pareja ? [userId, pareja.id].sort() : null;
+const conceptosCasa = () => (casa && casa.data && Array.isArray(casa.data.conceptos)) ? casa.data.conceptos : [];
+const miPct = c => { const p = Math.max(0, Math.min(100, +c.pctA || 0)); return casa && casa.user_a === userId ? p : 100 - p; };
+const pctA = (mio) => casa && casa.user_a === userId ? mio : 100 - mio;   // de "mi %" a % de user_a
+const parteDe = r => +(r.user_a === userId ? r.parte_a : r.parte_b);
+const idPagoCasa = (c, mk) => `casa-${c.id}-${mk}`;
+async function traerCasa(){
+  if (!sb || !userId) return;
+  if (!vinculado()){ casa = null; render(); return; }
+  const [a, b] = casaParId();
+  const { data, error } = await sb.from('casa').select('*').eq('id', a + ':' + b).maybeSingle();
+  if (faltaTabla(error)){ casaEstado = 'sin-tablas'; casa = null; render(); return; }
+  if (error){ if (casaEstado === 'cargando') casaEstado = 'sin-red'; render(); return; }
+  casaEstado = 'ok'; casa = data || null;
+  try { localStorage.setItem(casaKey(), JSON.stringify(casa)); } catch(e){}
+  render();
+}
+async function guardarCasa(conceptos){
+  const [a, b] = casaParId();
+  const row = { id: a + ':' + b, user_a: a, user_b: b, data: { ...((casa && casa.data) || {}), conceptos }, updated_at: new Date().toISOString() };
+  const { error } = await sb.from('casa').upsert(row);
+  if (error) throw error;
+  casa = row; try { localStorage.setItem(casaKey(), JSON.stringify(casa)); } catch(e){}
+  render();
+}
+
+function renderCasa(){
+  const body = $('#csBody'), al = $('#csAlert');
+  body.innerHTML = ''; al.innerHTML = ''; al.hidden = true; $('#btnCasa').hidden = true; resumen.casa = null;
+  const mes = startOf('mes', ancla), mk = mesKey(mes), nombreMes = fmtD(mes, {month:'long'});
+  $('#csTitle').textContent = `Casa · ${nombreMes}`;
+  const msg = (t, btnTxt, fn) => {
+    body.append(Object.assign(document.createElement('p'), {className:'fx-empty', textContent: t}));
+    if (btnTxt){ const w = document.createElement('div'); w.className = 'cs-cta';
+      const b = Object.assign(document.createElement('button'), {type:'button', className:'btn primary', textContent: btnTxt}); b.addEventListener('click', fn); w.append(b); body.append(w); }
+  };
+  $('#csSub').textContent = 'Renta, servicios y mandado que comparten los dos';
+  if (!userId) return;
+  if (compEstado === 'sin-tablas') return msg('Para usar Casa primero corre en Supabase los archivos 3_pareja_compartidos.sql y 4_casa.sql.');
+  if (compEstado === 'cargando' && !pareja) return msg('Cargando…');
+  if (!vinculado()) return msg('Casa se comparte con tu pareja. Primero vinculen sus cuentas.', compEstado === 'ok' ? 'Vincular pareja' : null, abrirPareja);
+  if (casaEstado === 'sin-tablas') return msg('Falta correr 4_casa.sql en Supabase para activar Casa.');
+  if (!casa && casaEstado !== 'ok') return msg(casaEstado === 'sin-red' ? 'Sin conexión: no se pudo cargar Casa.' : 'Cargando la casa…');
+  $('#csSub').textContent = `Con ${nombrePareja()} · lo ven y editan los dos`;
+  if (!casa) return msg('Armen el presupuesto de la casa: renta, luz, agua, internet, gas, mandado y lo que necesiten. Les dejo una lista base para que solo pongan montos y días.', 'Configurar casa', async () => {
+    const [a] = casaParId();
+    const conceptos = CASA_BASE.map(c => ({ id: 'k' + uid(), monto: 0, pctA: 50, ...c }));
+    try { await guardarCasa(conceptos); abrirCasaAdmin(); } catch(e){ toast('No se pudo crear la casa. Revisa tu conexión.'); }
+  });
+
+  $('#btnCasa').hidden = false;
+  const hoy = hoy0(), esActual = mesKey(hoy) === mk, conceptos = conceptosCasa();
+  const rowsMes = compRows.filter(r => r.casa && r.fecha.startsWith(mk));
+  const fijos = conceptos.filter(c => c.tipo === 'fijo').map(c => {
+    const pago = compRows.find(r => r.id === idPagoCasa(c, mk));
+    const venc = new Date(mes.getFullYear(), mes.getMonth(), Math.min(c.dia || 1, diasMes(mes)));
+    return { c, pago, venc, dias: difDias(hoy, venc) };
+  }).sort((a, b) => a.venc - b.venc);
+  const vars = conceptos.filter(c => c.tipo === 'variable').map(c => {
+    const rows = rowsMes.filter(r => !r.casa_concepto && r.cat === c.cat);
+    return { c, gastado: rows.reduce((a, r) => a + +r.monto, 0), n: rows.length };
+  });
+  const catsVar = new Set(vars.map(v => v.c.cat));
+  const otros = rowsMes.filter(r => !r.casa_concepto && !catsVar.has(r.cat));
+  const presupuesto = conceptos.reduce((a, c) => a + (+c.monto || 0), 0);
+  const miPresupuesto = conceptos.reduce((a, c) => a + (+c.monto || 0) * miPct(c) / 100, 0);
+  const gastado = rowsMes.reduce((a, r) => a + +r.monto, 0);
+  const miParte = rowsMes.reduce((a, r) => a + parteDe(r), 0);
+  const pend = fijos.filter(f => !f.pago);
+  const porPagar = pend.reduce((a, f) => a + (+f.c.monto || 0), 0);
+  const pusoYo = rowsMes.filter(r => r.pagado_por === userId).reduce((a, r) => a + +r.monto, 0);
+  const urg = esActual ? pend.filter(f => f.dias <= 3) : [];
+  resumen.casa = { porPagar, pend: pend.length, urg: urg.length, nombreMes };
+
+  urg.forEach(f => {
+    const d = document.createElement('div'), b = document.createElement('b'); b.textContent = f.c.nombre;
+    d.append(b, ` ${f.dias < 0 ? `venció hace ${-f.dias} ${-f.dias === 1 ? 'día' : 'días'}` : f.dias === 0 ? 'se paga hoy' : f.dias === 1 ? 'se paga mañana' : `se paga en ${f.dias} días`}${f.c.monto ? `: ${money.format(f.c.monto)}` : ''}`);
+    al.append(d);
+  });
+  al.hidden = !urg.length;
+
+  const sum = document.createElement('div'); sum.className = 'cs-sum';
+  [['Presupuesto del mes', money.format(presupuesto), `tu parte ${money.format(miPresupuesto)}`, ''],
+   ['Gastado', money.format(gastado), presupuesto ? `${Math.round(gastado / presupuesto * 100)}% del presupuesto` : 'sin presupuesto', ''],
+   ['Tu parte de lo gastado', money.format(miParte), `${nombrePareja()}: ${money.format(gastado - miParte)}`, ''],
+   ['Pagos por hacer', money.format(porPagar), pend.length ? `${pend.length} ${pend.length === 1 ? 'pendiente' : 'pendientes'}` : 'Todo pagado ✓', porPagar > 0 ? 'due' : '']]
+  .forEach(([a, b, c, cls]) => { const d = document.createElement('div'); if (cls) d.className = cls;
+    d.innerHTML = '<small></small><strong class="num"></strong><em></em>'; d.children[0].textContent = a; d.children[1].textContent = b; d.children[2].textContent = c; sum.append(d); });
+  body.append(sum);
+  if (gastado > 0){
+    const p = document.createElement('p'); p.className = 'cs-puso num';
+    p.append('Este mes pusiste ', Object.assign(document.createElement('b'), {textContent: money.format(pusoYo)}), ` y ${nombrePareja()} `, Object.assign(document.createElement('b'), {textContent: money.format(gastado - pusoYo)}), '.');
+    body.append(p);
+  }
+
+  // pagos fijos
+  if (fijos.length){
+    const h = document.createElement('div'); h.className = 'cs-h';
+    h.innerHTML = '<span>Pagos fijos</span><small class="num"></small>';
+    h.querySelector('small').textContent = `${fijos.length - pend.length} de ${fijos.length} pagados`;
+    body.append(h);
+    const ul = document.createElement('ul'); ul.className = 'fx-list';
+    fijos.forEach(f => {
+      const c = CAT[f.c.cat] || CAT.otros, li = document.createElement('li');
+      const pronto = esActual && !f.pago && f.dias <= 3;
+      li.className = 'fx' + (f.pago ? ' done' : '') + (pronto ? ' soon' : '');
+      let estado;
+      if (f.pago) estado = `Pagó ${f.pago.pagado_por === userId ? 'tú' : nombrePareja()} el ${fmtD(parse(f.pago.fecha), {day:'numeric', month:'short'})}`;
+      else if (!esActual) estado = `Se paga el día ${f.venc.getDate()}`;
+      else if (f.dias < 0) estado = `Venció hace ${-f.dias} ${-f.dias === 1 ? 'día' : 'días'}`;
+      else if (f.dias === 0) estado = 'Se paga hoy';
+      else if (f.dias === 1) estado = 'Se paga mañana';
+      else estado = `En ${f.dias} días`;
+      const p = miPct(f.c);
+      li.innerHTML = `<div class="when"><strong class="num">${f.venc.getDate()}</strong><small>${fmtD(f.venc, {month:'short'}).replace('.', '')}</small></div>
+        <div class="nm"></div><div class="am num"></div><div class="st"></div>
+        <div class="div num"></div>
+        <div class="tg"><button class="tog" type="button" aria-pressed="${!!f.pago}">${f.pago ? '✓ Pagado' : 'Marcar pagado'}</button></div>`;
+      li.querySelector('.nm').textContent = `${c.ico} ${f.c.nombre}`;
+      li.querySelector('.am').textContent = f.pago ? money.format(+f.pago.monto) : (f.c.monto ? money.format(f.c.monto) : 'Sin monto');
+      li.querySelector('.st').textContent = estado;
+      const monto = f.pago ? +f.pago.monto : (+f.c.monto || 0);
+      li.querySelector('.div').textContent = f.pago
+        ? `Tu parte ${money.format(parteDe(f.pago))} · ${nombrePareja()} ${money.format(+f.pago.monto - parteDe(f.pago))}`
+        : `Tú ${p}%${monto ? ` (${money.format(monto * p / 100)})` : ''} · ${nombrePareja()} ${100 - p}%`;
+      li.querySelector('.tog').addEventListener('click', () => abrirPagoCasa(f.c, mes, f.pago));
+      ul.append(li);
+    });
+    body.append(ul);
+  }
+
+  // presupuestos variables
+  if (vars.length){
+    const h = document.createElement('div'); h.className = 'cs-h'; h.innerHTML = '<span>Presupuestos</span><small>se llenan con los gastos de la casa</small>'; body.append(h);
+    vars.forEach(v => {
+      const c = CAT[v.c.cat] || CAT.otros, el = document.createElement('div'); el.className = 'cs-var';
+      const pres = +v.c.monto || 0, over = pres > 0 && v.gastado > pres;
+      el.innerHTML = `<span class="ico" style="background:color-mix(in srgb, var(${c.v}) 18%, transparent)">${c.ico}</span>
+        <span class="nm"></span><span class="am num"></span>
+        <span class="bar"><i style="width:${pres ? Math.min(1, v.gastado / pres) * 100 : (v.gastado ? 100 : 0)}%;background:${over ? 'var(--up)' : `var(${c.v})`}"></i></span>
+        <span class="meta num ${over ? 'over' : ''}"></span><button type="button" class="add">+ Gasto</button>`;
+      el.querySelector('.nm').textContent = v.c.nombre;
+      el.querySelector('.am').textContent = money.format(v.gastado);
+      el.querySelector('.meta').textContent = !pres ? `${v.n} ${v.n === 1 ? 'gasto' : 'gastos'} · sin presupuesto`
+        : over ? `Se pasaron ${money.format(v.gastado - pres)} de ${money.format(pres)}` : `Quedan ${money.format(pres - v.gastado)} de ${money.format(pres)}`;
+      el.querySelector('.add').addEventListener('click', () => abrir(null, { cat: v.c.cat, casa: true, pct: miPct(v.c) }));
+      body.append(el);
+    });
+  }
+  if (otros.length){
+    const p = document.createElement('p'); p.className = 'cs-puso num'; p.style.marginTop = '12px';
+    p.textContent = `Otros gastos de la casa este mes: ${money.format(otros.reduce((a, r) => a + +r.monto, 0))} (${otros.length})`;
+    body.append(p);
+  }
+  if (!conceptos.length) msg('No hay conceptos. Agrega renta, servicios o presupuestos en “Administrar casa”.');
+}
+
+// --- pagar un concepto fijo
+const dlgCP = $('#dlgCP'); let cpCtx = null, cpQuien = 'yo';
+function opcionesMetodo(sel){
+  sel.innerHTML = '';
+  METODOS.forEach(m => {
+    if (m.id === 'credito' && state.tarjetas.length){
+      state.tarjetas.forEach(t => sel.append(new Option(`💳 ${nombreTj(t)}`, 'credito:' + t.id)));
+      sel.append(new Option(`${m.ico} Crédito (otra)`, 'credito'));
+    } else sel.append(new Option(`${m.ico} ${m.name}`, m.id));
+  });
+}
+function pintarCP(){
+  $('#cpWho').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.w === cpQuien));
+  $('#cpWhoP').textContent = `Pagó ${nombrePareja()}`;
+  $('#cpMetLbl').hidden = cpQuien !== 'yo';
+  const m = num($('#cpMonto').value) || 0, p = miPct(cpCtx.c);
+  $('#cpInfo').textContent = m ? `Se divide: tú ${money.format(r2(m * p / 100))} (${p}%) · ${nombrePareja()} ${money.format(r2(m - r2(m * p / 100)))} (${100 - p}%). Cambia el % en “Administrar casa”.` : '';
+}
+function abrirPagoCasa(c, mes, pago){
+  cpCtx = { c, mes, pago };
+  const hoy = hoy0(), esActual = mesKey(hoy) === mesKey(mes);
+  $('#cpTitle').textContent = `${pago ? 'Pago de' : 'Pagar'} ${c.nombre} · ${fmtD(mes, {month:'long'})}`;
+  $('#cpMonto').value = pago ? +pago.monto : (c.monto || '');
+  cpQuien = pago ? (pago.pagado_por === userId ? 'yo' : 'pareja') : 'yo';
+  opcionesMetodo($('#cpMet'));
+  const mv = pago && pago.pagado_por === userId ? (pago.tarjeta_id ? 'credito:' + pago.tarjeta_id : (pago.metodo || 'transferencia')) : 'transferencia';
+  $('#cpMet').value = mv; if (!$('#cpMet').value) $('#cpMet').selectedIndex = 0;
+  $('#cpFecha').value = pago ? pago.fecha : (esActual ? iso(hoy) : iso(new Date(mes.getFullYear(), mes.getMonth(), Math.min(c.dia || 1, diasMes(mes)))));
+  $('#cpDel').hidden = !pago; $('#cpErr').textContent = '';
+  pintarCP(); dlgCP.showModal();
+  if (!pago) setTimeout(() => $('#cpMonto').focus(), 50);
+}
+$('#cpWho').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { cpQuien = b.dataset.w; pintarCP(); }));
+$('#cpMonto').addEventListener('input', pintarCP);
+$('#cpCancel').addEventListener('click', () => dlgCP.close());
+$('#formCP').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const { c, mes, pago } = cpCtx, m = r2(num($('#cpMonto').value)), fecha = $('#cpFecha').value;
+  if (!(m > 0)){ $('#cpErr').textContent = 'Escribe cuánto se pagó'; return; }
+  if (!fecha){ $('#cpErr').textContent = 'Elige la fecha del pago'; return; }
+  if (!vinculado()){ $('#cpErr').textContent = 'El vínculo con tu pareja no está activo.'; return; }
+  const mio = r2(m * miPct(c) / 100), suyo = r2(m - mio);
+  const [metodo, tj] = $('#cpMet').value.split(':');
+  const base = pago || { id: idPagoCasa(c, mesKey(mes)), user_a: userId, user_b: pareja.id };
+  const soyA = base.user_a === userId, otro = soyA ? base.user_b : base.user_a, pagoYo = cpQuien === 'yo';
+  const cambios = { monto: m, fecha, cat: c.cat, nota: c.nombre, casa: true, casa_concepto: c.id,
+    parte_a: soyA ? mio : suyo, parte_b: soyA ? suyo : mio, pagado_por: pagoYo ? userId : otro,
+    metodo: pagoYo ? metodo : (pago && pago.pagado_por !== userId ? pago.metodo : null),
+    tarjeta_id: pagoYo ? (tj && state.tarjetas.some(t => t.id === tj) ? tj : null) : (pago && pago.pagado_por !== userId ? pago.tarjeta_id : null),
+    updated_at: new Date().toISOString() };
+  $('#cpSave').disabled = true;
+  const { error } = pago ? await sb.from('gastos_compartidos').update(cambios).eq('id', base.id)
+                         : await sb.from('gastos_compartidos').insert({ ...base, ...cambios });
+  $('#cpSave').disabled = false;
+  if (error){ $('#cpErr').textContent = navigator.onLine === false ? 'Sin internet: el pago necesita conexión para guardarse.' : 'No se pudo guardar el pago. Revisa tu conexión y el vínculo.'; return; }
+  setComp([{ creado: new Date().toISOString(), ...base, ...cambios }, ...compRows.filter(r => r.id !== base.id)]);
+  dlgCP.close(); render();
+  toast(`${c.nombre} pagado: tu parte ${money.format(mio)}`);
+});
+$('#cpDel').addEventListener('click', async () => {
+  const { c, pago } = cpCtx;
+  if (!confirm(`¿Quitar el pago de ${c.nombre}? Se borra también de la cuenta de ${nombrePareja()}.`)) return;
+  const { error } = await sb.from('gastos_compartidos').delete().eq('id', pago.id);
+  if (error){ $('#cpErr').textContent = 'No se pudo quitar. Revisa tu conexión.'; return; }
+  setComp(compRows.filter(r => r.id !== pago.id)); dlgCP.close(); render(); toast(`${c.nombre} marcado como pendiente`);
+});
+
+// --- administrar conceptos de la casa
+const dlgC = $('#dlgC'); let cEdit = null, cTipo = 'fijo';
+$('#cCat').innerHTML = CATS.map(c => `<option value="${c.id}">${c.ico} ${c.name}</option>`).join('');
+function pintarCTipo(){
+  $('#cTipo').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.t === cTipo));
+  $('#cDiaLbl').hidden = cTipo !== 'fijo';
+  $('#cMontoTxt').textContent = cTipo === 'fijo' ? 'Monto mensual' : 'Presupuesto mensual';
+  $('#cTipoInfo').textContent = cTipo === 'fijo' ? 'Se paga una vez al mes (renta, luz, internet). Lo marcan como pagado y queda registrado para los dos.'
+    : 'Un tope para el mes (mandado, limpieza). Se va llenando con los gastos de la casa de esa categoría.';
+  const p = parseInt($('#cPct').value, 10);
+  $('#cPctInfo').textContent = p >= 0 && p <= 100 ? `Tú pagas ${p}% y ${nombrePareja()} ${100 - p}%.` : '';
+}
+function pintarCList(){
+  const l = $('#cList'); l.innerHTML = '';
+  conceptosCasa().slice().sort((a, b) => (a.tipo === b.tipo ? (a.dia || 99) - (b.dia || 99) : a.tipo === 'fijo' ? -1 : 1)).forEach(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'fm-item';
+    b.innerHTML = `<span>${(CAT[c.cat] || CAT.otros).ico}</span><b></b><small class="num"></small>`;
+    b.querySelector('b').textContent = c.nombre;
+    b.querySelector('small').textContent = `${c.monto ? money0.format(c.monto) : 'sin monto'} · ${c.tipo === 'fijo' ? 'día ' + c.dia : 'presupuesto'} · tú ${miPct(c)}%`;
+    if (cEdit && cEdit.id === c.id) b.style.outline = '2px solid var(--accent)';
+    b.addEventListener('click', () => cargarC(c));
+    l.append(b);
+  });
+}
+function cargarC(c){
+  cEdit = c || null; cTipo = c ? c.tipo : 'fijo';
+  $('#cNombre').value = c ? c.nombre : ''; $('#cMonto').value = c && c.monto ? c.monto : '';
+  $('#cDia').value = c && c.dia ? c.dia : ''; $('#cCat').value = c ? c.cat : 'hogar';
+  $('#cPct').value = c ? miPct(c) : 50;
+  $('#cDel').hidden = !c; $('#cSave').textContent = c ? 'Guardar cambios' : 'Agregar'; $('#cErr').textContent = '';
+  pintarCTipo(); pintarCList();
+}
+function abrirCasaAdmin(){ const pend = conceptosCasa().find(c => !c.monto); cargarC(pend || null); dlgC.showModal(); }
+$('#btnCasa').addEventListener('click', abrirCasaAdmin);
+$('#cTipo').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { cTipo = b.dataset.t; pintarCTipo(); }));
+$('#cPct').addEventListener('input', pintarCTipo);
+$('#cClose').addEventListener('click', () => dlgC.close());
+$('#formC').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const nombre = $('#cNombre').value.trim(), monto = $('#cMonto').value.trim() === '' ? 0 : num($('#cMonto').value);
+  const dia = parseInt($('#cDia').value, 10), p = parseInt($('#cPct').value, 10);
+  const err = t => { $('#cErr').textContent = t; };
+  if (!nombre) return err('Ponle un nombre, por ejemplo “Renta”');
+  if (!(monto >= 0)) return err('Escribe un monto válido (o déjalo vacío)');
+  if (cTipo === 'fijo' && !(dia >= 1 && dia <= 31)) return err('El día de pago va del 1 al 31');
+  if (!(p >= 0 && p <= 100)) return err('Tu parte va de 0 a 100%');
+  const datos = { nombre, tipo: cTipo, monto: r2(monto), dia: cTipo === 'fijo' ? dia : null, cat: $('#cCat').value, pctA: pctA(p) };
+  const lista = cEdit ? conceptosCasa().map(c => c.id === cEdit.id ? { ...c, ...datos } : c) : [...conceptosCasa(), { id: 'k' + uid(), ...datos }];
+  $('#cSave').disabled = true;
+  try { await guardarCasa(lista); } catch(e){ $('#cSave').disabled = false; return err('No se pudo guardar. Revisa tu conexión y el vínculo.'); }
+  $('#cSave').disabled = false;
+  const sig = lista.find(c => !c.monto && (!cEdit || c.id !== cEdit.id));
+  cargarC(cEdit ? null : null); if (sig && !cEdit) cargarC(sig);
+  toast(`${nombre} guardado`);
+});
+$('#cDel').addEventListener('click', async () => {
+  if (!confirm(`¿Eliminar “${cEdit.nombre}” de la casa? Los pagos ya registrados se conservan.`)) return;
+  try { await guardarCasa(conceptosCasa().filter(c => c.id !== cEdit.id)); } catch(e){ $('#cErr').textContent = 'No se pudo eliminar. Revisa tu conexión.'; return; }
+  cargarC(null); toast('Concepto eliminado');
+});
+
 // ---------- toast ----------
 let tTimer;
 function toast(msg, undo){
@@ -1959,7 +2595,6 @@ function irA(t){
 }
 document.querySelectorAll('#tabbar [data-t]').forEach(b => b.addEventListener('click', () => irA(b.dataset.t)));
 document.querySelectorAll('#subseg button').forEach(b => b.addEventListener('click', () => { sub = b.dataset.s; guardarUI(); aplicarSecciones(); }));
-$('#tabAdd').addEventListener('click', () => abrir());
 
 function renderAtajos(){
   const box = $('#atajos'); box.innerHTML = '';
@@ -1979,9 +2614,12 @@ function renderAtajos(){
     mk(f.urg ? 'warn' : '', `Fijos · falta apartar`, money.format(Math.max(0, f.falta)),
        f.urg ? `${f.urg} ${f.urg === 1 ? 'pago' : 'pagos'} en 3 días o menos` : (f.falta <= 0 ? 'Todo listo este mes ✓' : `de ${money0.format(f.total)} en ${f.nombreMes}`), 'fijos');
   } else mk('', 'Gastos fijos', 'Agregar', 'Membresías y servicios', 'fijos');
+  const k = resumen.casa;
+  if (k) mk(k.urg ? 'warn' : '', 'Casa · por pagar', money.format(k.porPagar),
+            k.urg ? `${k.urg} ${k.urg === 1 ? 'pago' : 'pagos'} en 3 días o menos` : (k.pend ? `${k.pend} ${k.pend === 1 ? 'pendiente' : 'pendientes'} en ${k.nombreMes}` : 'Todo pagado ✓'), 'casa');
   // puntos rojos en la barra
   const dot = (t2, on) => { const b = document.querySelector(`#tabbar [data-t="${t2}"]`); let d = b.querySelector('.dot'); if (on && !d) b.append(Object.assign(document.createElement('i'), {className: 'dot'})); if (!on && d) d.remove(); };
-  dot('tarjetas', !!(t && t.alertas)); dot('fijos', !!(f && f.urg));
+  dot('tarjetas', !!(t && t.alertas)); dot('fijos', !!(f && f.urg)); dot('casa', !!(k && k.urg));
 }
 
 // theme changes → redraw charts with new colors
