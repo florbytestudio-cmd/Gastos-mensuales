@@ -220,6 +220,7 @@ select.inp{appearance:auto}
 .tj-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))}
 .tj{border:1px solid var(--line);border-top:6px solid var(--cc);border-radius:18px;padding:16px;display:grid;gap:14px;align-content:start}
 .tj-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.tj-h > button{flex:none;white-space:nowrap}
 .tj-h b{font-size:1.05rem;font-weight:800;letter-spacing:-.01em;display:block}
 .tj-h small{color:var(--ink-2);font-size:.82rem}
 .tj-due{border-radius:14px;padding:12px 14px;background:var(--surface-2);display:grid;gap:6px}
@@ -288,6 +289,58 @@ select.inp{appearance:auto}
 .pills{display:flex;gap:8px;flex-wrap:wrap}
 details.f > summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 0}
 
+/* Secciones en celular */
+.tabbar, .subseg, .atajos, .tj-pick-row{display:none}
+.comp > summary{list-style:none;cursor:pointer}
+.comp > summary::-webkit-details-marker{display:none}
+@media (max-width:899px){
+  .wrap{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+  .wrap [data-sec]:not(.on){display:none !important}
+  .wrap [data-sub]:not(.sub-on){display:none !important}
+  body:not(.locked) .fab{display:none}
+  body[data-tab="tarjetas"] .top .seg, body[data-tab="tarjetas"] .top .nav{display:none}
+  body[data-tab="fijos"] .top .seg, body[data-tab="fijos"] #btnBudget{display:none}
+  body[data-tab="movs"] #btnBudget{display:none}
+  section.grid + section.grid{margin-top:0}
+  .grid{gap:14px}
+  .fixed{margin-bottom:0}
+  body:not(.locked) .tabbar{display:grid;grid-template-columns:repeat(5,1fr);align-items:end;position:fixed;left:0;right:0;bottom:0;z-index:6;
+    background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);padding:6px max(6px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-right,0px))}
+  .tabbar button{border:0;background:transparent;display:grid;justify-items:center;gap:2px;padding:6px 2px;border-radius:12px;color:var(--ink-2);font-size:.72rem;font-weight:600;position:relative}
+  .tabbar button .ti{font-size:1.25rem;line-height:1;filter:grayscale(1);opacity:.7}
+  .tabbar button[aria-current="page"]{color:var(--ink)}
+  .tabbar button[aria-current="page"] .ti{filter:none;opacity:1}
+  .tabbar button[aria-current="page"]::after{content:"";position:absolute;top:0;width:22px;height:3px;border-radius:3px;background:var(--accent)}
+  .tabbar .dot{position:absolute;top:4px;right:calc(50% - 18px);width:9px;height:9px;border-radius:50%;background:var(--up);border:2px solid var(--surface)}
+  .tabbar .add{align-self:center}
+  .tabbar .add span{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:1.9rem;font-weight:500;line-height:1;
+    box-shadow:0 8px 22px -8px color-mix(in srgb,var(--accent) 80%,transparent);margin-top:-22px}
+  .subseg.on{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 12px}
+  .subseg::-webkit-scrollbar{display:none}
+  .subseg button{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;font-size:.88rem;color:var(--ink-2)}
+  .subseg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .atajos.on{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+  .atajos button{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:12px 14px;text-align:left;display:grid;gap:2px;position:relative}
+  .atajos button.warn{border-color:color-mix(in srgb,var(--up) 50%,var(--line));background:color-mix(in srgb,var(--up) 9%,var(--surface))}
+  .atajos small{color:var(--ink-2);font-size:.78rem;font-weight:600}
+  .atajos strong{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+  .atajos em{font-style:normal;font-size:.76rem;color:var(--ink-2)}
+  .atajos button.warn em{color:var(--up);font-weight:600}
+  .tj-pick-row{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 0 12px;padding-bottom:2px}
+  .tj-pick-row::-webkit-scrollbar{display:none}
+  .tj-pick-row button{flex:none;border:2px solid var(--line);background:var(--surface-2);border-radius:14px;padding:8px 12px;text-align:left;display:grid;gap:1px;position:relative}
+  .tj-pick-row button b{font-size:.88rem;font-weight:700}
+  .tj-pick-row button small{font-size:.74rem;color:var(--ink-2)}
+  .tj-pick-row button[aria-pressed="true"]{border-color:var(--cc);background:color-mix(in srgb,var(--cc) 12%,var(--surface))}
+  .tj-pick-row button.warn small{color:var(--up);font-weight:600}
+  .tj-grid > .tj:not(.sel){display:none}
+  .tj-sum{margin-bottom:12px}
+  .comp > summary h3::after{content:" ▾";color:var(--ink-2)}
+  .comp:not([open]) > summary h3::after{content:" ▸"}
+  .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+}
+
 /* Acceso */
 body.locked .wrap, body.locked .fab{display:none}
 .auth{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px}
@@ -333,7 +386,8 @@ body.locked .wrap, body.locked .fab{display:none}
     </div>
   </header>
 
-  <section class="hero" aria-live="polite">
+  <div class="atajos" id="atajos" data-sec="resumen"></div>
+  <section class="hero" aria-live="polite" data-sec="resumen" id="heroBox">
     <p class="period" id="periodLabel"></p>
     <p class="total num" id="total"></p>
     <p class="delta" id="delta"></p>
@@ -341,7 +395,7 @@ body.locked .wrap, body.locked .fab{display:none}
   </section>
 
 
-  <section class="panel fixed" aria-labelledby="fxTitle">
+  <section class="panel fixed" aria-labelledby="fxTitle" data-sec="fijos">
     <div class="fx-head">
       <div><h2 id="fxTitle">Gastos fijos</h2><p class="sub" id="fxSub"></p></div>
       <div class="hd-act">
@@ -353,7 +407,7 @@ body.locked .wrap, body.locked .fab{display:none}
     <div id="fxBody"></div>
   </section>
 
-  <section class="panel fixed" aria-labelledby="tjTitle">
+  <section class="panel fixed" aria-labelledby="tjTitle" data-sec="tarjetas">
     <div class="fx-head">
       <div><h2 id="tjTitle">Tarjetas de crédito</h2><p class="sub" id="tjSub"></p></div>
       <div class="hd-act">
@@ -363,10 +417,11 @@ body.locked .wrap, body.locked .fab{display:none}
     </div>
     <div class="fx-alert" id="tjAlert" role="alert" hidden></div>
     <div id="tjSum"></div>
+    <div class="tj-pick-row" id="tjPick" role="group" aria-label="Elegir tarjeta"></div>
     <div class="tj-grid" id="tjGrid"></div>
     <div id="tjComp"></div>
   </section>
-  <section class="grid charts">
+  <section class="grid charts" data-sec="resumen">
     <div class="panel">
       <h2 id="trendTitle">Tendencia</h2>
       <p class="sub" id="trendSub">Toca una barra para ir a ese periodo</p>
@@ -382,25 +437,28 @@ body.locked .wrap, body.locked .fab{display:none}
     </div>
   </section>
 
+  <div class="subseg" id="subseg" data-sec="resumen" role="group" aria-label="Detalle">
+    <button data-s="cat">Categorías</button><button data-s="pago">Cómo pagaste</button><button data-s="pareja">Compartido</button>
+  </div>
   <section class="grid lower">
-    <div class="panel">
+    <div class="panel" data-sec="resumen" data-sub="cat">
       <h2>Categorías</h2>
       <p class="sub" id="catSub">Gastado contra presupuesto</p>
       <ul class="cats" id="cats"></ul>
     </div>
-    <div class="panel">
+    <div class="panel" data-sec="movs">
       <h2>Movimientos</h2>
       <p class="sub" id="movSub"></p>
       <div class="list" id="list"></div>
     </div>
   </section>
   <section class="grid lower">
-    <div class="panel">
+    <div class="panel" data-sec="resumen" data-sub="pago">
       <h2>Cómo pagaste</h2>
       <p class="sub">Total del periodo por método de pago</p>
       <ul class="cats" id="mets"></ul>
     </div>
-    <div class="panel">
+    <div class="panel" data-sec="resumen" data-sub="pareja">
       <h2>Compartido con tu pareja</h2>
       <p class="sub" id="shSub"></p>
       <div id="shBody"></div>
@@ -409,6 +467,13 @@ body.locked .wrap, body.locked .fab{display:none}
 </div>
 
 <button class="fab" id="fab"><span>+</span> Agregar gasto</button>
+<nav class="tabbar" id="tabbar" aria-label="Secciones">
+  <button data-t="resumen"><span class="ti">📊</span>Resumen</button>
+  <button data-t="movs"><span class="ti">🧾</span>Movimientos</button>
+  <button class="add" id="tabAdd" aria-label="Agregar gasto"><span>+</span></button>
+  <button data-t="fijos"><span class="ti">📅</span>Fijos</button>
+  <button data-t="tarjetas"><span class="ti">💳</span>Tarjetas</button>
+</nav>
 
 <dialog id="dlg">
   <form class="dlg" method="dialog" id="form" novalidate>
@@ -607,6 +672,7 @@ const norm = (d = {}) => ({
 });
 let state = norm({});
 let vista = 'mes';
+const resumen = { fijos: null, tj: null };
 let ancla = new Date();
 
 // ---------- utils ----------
@@ -1055,6 +1121,8 @@ function render(){
 
   renderFijos();
   renderTarjetas();
+  renderAtajos();
+  aplicarSecciones();
   renderTrend();
   renderDonut(porCat, total);
 }
@@ -1255,6 +1323,7 @@ function renderFijos(){
   const body = $('#fxBody'); body.innerHTML = '';
   const alertBox = $('#fxAlert'); alertBox.innerHTML = ''; alertBox.hidden = true;
 
+  resumen.fijos = null;
   if (!state.fijos.length){
     $('#fxSub').textContent = 'Tus membresías y pagos que se cobran cada mes';
     $('#fxAll').hidden = true;
@@ -1274,6 +1343,7 @@ function renderFijos(){
   const falta = total - pagado - apartado;
   $('#fxSub').textContent = `${items.length} ${items.length===1?'pago':'pagos'} al mes · ${money.format(total)} en total`;
   $('#fxAll').hidden = falta <= 0;
+  resumen.fijos = { falta, total, nombreMes, urg: esActual ? items.filter(i => !i.pago && i.dias <= 3).length : 0 };
 
   // recordatorio
   if (esActual){
@@ -1508,6 +1578,7 @@ function renderTarjetas(){
   const grid = $('#tjGrid'), sumBox = $('#tjSum'), alertBox = $('#tjAlert'), comp = $('#tjComp');
   grid.innerHTML = ''; sumBox.innerHTML = ''; alertBox.innerHTML = ''; alertBox.hidden = true; comp.innerHTML = '';
   $('#btnAbono').hidden = !state.tarjetas.length;
+  resumen.tj = null; $('#tjPick').innerHTML = '';
   if (!state.tarjetas.length){
     $('#tjSub').textContent = 'Corte, fecha límite, MSI y pagos de cada tarjeta';
     grid.append(Object.assign(document.createElement('p'), {className:'tj-empty', textContent:'Agrega tus tarjetas con su último estado de cuenta. Después, cada gasto con “Crédito” se suma solo a la tarjeta que elijas.'}));
@@ -1543,7 +1614,23 @@ function renderTarjetas(){
   });
   sumBox.append(sum);
 
-  sims.forEach(({t, s}) => grid.append(panelTarjeta(t, s)));
+  const pend = sims.filter(x => x.s.pendiente > 0.005).sort((a, b) => a.s.diasLimite - b.s.diasLimite);
+  resumen.tj = { pend: tot('pendiente'), est: tot('estimado'), prox: pend[0] || null, alertas: alertBox.children.length };
+  if (!sims.some(x => x.t.id === tjVista)) tjVista = (pend[0] || sims[0]).t.id;
+  const pick = $('#tjPick');
+  sims.forEach(({t, s}) => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.style.setProperty('--cc', `var(${tjColor(t)})`);
+    b.setAttribute('aria-pressed', t.id === tjVista);
+    const warn = s.pendiente > 0.005 && s.diasLimite <= 3;
+    if (warn) b.classList.add('warn');
+    b.innerHTML = '<b></b><small class="num"></small>';
+    b.querySelector('b').textContent = t.nombre.replace(/^Santander\s+/, '') + (t.term ? ' ·' + t.term : '');
+    b.querySelector('small').textContent = s.pendiente > 0.005 ? `${money0.format(s.pendiente)} · ${cuandoTxt(s.diasLimite)}` : 'Al corriente ✓';
+    b.addEventListener('click', () => { tjVista = t.id; guardarUI(); renderTarjetas(); });
+    pick.append(b);
+  });
+  sims.forEach(({t, s}) => { const el = panelTarjeta(t, s); if (t.id === tjVista) el.classList.add('sel'); grid.append(el); });
   renderComparativa(sims, comp);
 }
 
@@ -1662,9 +1749,10 @@ function renderComparativa(sims, box){
   const ini = r2(sims.reduce((a, x) => a + x.s.extraVivo, 0));
   const gastadoAct = r2(sims.reduce((a, x) => a + x.s.cargos, 0) + msiAct);
   const proy = r2(sims.reduce((a, x) => a + x.s.proyeccion, 0));
-  const w = document.createElement('div'); w.className = 'comp';
+  const w = document.createElement('details'); w.className = 'comp'; w.open = compAbierta ?? window.innerWidth >= 900;
+  w.addEventListener('toggle', () => { compAbierta = w.open; });
   const pctP = Math.round((proy - ref.total) / ref.total * 100);
-  w.innerHTML = `<h3></h3><p class="sub" style="margin:0"></p>
+  w.innerHTML = `<summary><h3></h3></summary><p class="sub" style="margin:0"></p>
     <div class="comp-tot">
       <div><small>Ciclo anterior</small><strong class="num"></strong></div>
       <div><small>Ciclo actual hasta hoy</small><strong class="num"></strong></div>
@@ -1853,6 +1941,48 @@ document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click'
 $('#prev').addEventListener('click', () => { ancla = addP(vista, startOf(vista, ancla), -1); render(); });
 $('#next').addEventListener('click', () => { ancla = addP(vista, startOf(vista, ancla), 1); render(); });
 $('#hoy').addEventListener('click', () => { ancla = new Date(); render(); });
+
+// ---------- secciones (celular) ----------
+let tab = 'resumen', sub = 'cat', tjVista = null, compAbierta = null;
+try { const u = JSON.parse(localStorage.getItem('mis-gastos-ui') || '{}'); tab = u.tab || tab; sub = u.sub || sub; tjVista = u.tj || null; } catch(e){}
+function guardarUI(){ try { localStorage.setItem('mis-gastos-ui', JSON.stringify({tab, sub, tj: tjVista})); } catch(e){} }
+function aplicarSecciones(){
+  document.body.dataset.tab = tab;
+  document.querySelectorAll('.wrap [data-sec]').forEach(el => el.classList.toggle('on', el.dataset.sec === tab));
+  document.querySelectorAll('.wrap [data-sub]').forEach(el => el.classList.toggle('sub-on', el.dataset.sub === sub));
+  document.querySelectorAll('#tabbar [data-t]').forEach(b => { if (b.dataset.t === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  document.querySelectorAll('#subseg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s === sub));
+}
+function irA(t){
+  if (t === tab){ window.scrollTo({top: 0, behavior: 'smooth'}); return; }
+  tab = t; guardarUI(); aplicarSecciones(); window.scrollTo(0, 0);
+}
+document.querySelectorAll('#tabbar [data-t]').forEach(b => b.addEventListener('click', () => irA(b.dataset.t)));
+document.querySelectorAll('#subseg button').forEach(b => b.addEventListener('click', () => { sub = b.dataset.s; guardarUI(); aplicarSecciones(); }));
+$('#tabAdd').addEventListener('click', () => abrir());
+
+function renderAtajos(){
+  const box = $('#atajos'); box.innerHTML = '';
+  const mk = (cls, a, b, c, dest) => {
+    const el = document.createElement('button'); el.type = 'button'; if (cls) el.className = cls;
+    el.innerHTML = '<small></small><strong class="num"></strong><em></em>';
+    el.children[0].textContent = a; el.children[1].textContent = b; el.children[2].textContent = c;
+    el.addEventListener('click', () => irA(dest)); box.append(el);
+  };
+  const f = resumen.fijos, t = resumen.tj;
+  if (t){
+    const p = t.prox;
+    mk(t.alertas ? 'warn' : '', 'Tarjetas · por pagar', money.format(t.pend),
+       p ? `${p.t.nombre.replace(/^Santander\s+/, '')}: ${cuandoTxt(p.s.diasLimite)}` : `Próximos cortes ${money0.format(t.est)}`, 'tarjetas');
+  } else mk('', 'Tarjetas', 'Agregar', 'Corte, MSI y pagos', 'tarjetas');
+  if (f){
+    mk(f.urg ? 'warn' : '', `Fijos · falta apartar`, money.format(Math.max(0, f.falta)),
+       f.urg ? `${f.urg} ${f.urg === 1 ? 'pago' : 'pagos'} en 3 días o menos` : (f.falta <= 0 ? 'Todo listo este mes ✓' : `de ${money0.format(f.total)} en ${f.nombreMes}`), 'fijos');
+  } else mk('', 'Gastos fijos', 'Agregar', 'Membresías y servicios', 'fijos');
+  // puntos rojos en la barra
+  const dot = (t2, on) => { const b = document.querySelector(`#tabbar [data-t="${t2}"]`); let d = b.querySelector('.dot'); if (on && !d) b.append(Object.assign(document.createElement('i'), {className: 'dot'})); if (!on && d) d.remove(); };
+  dot('tarjetas', !!(t && t.alertas)); dot('fijos', !!(f && f.urg));
+}
 
 // theme changes → redraw charts with new colors
 const rebuild = () => { chartDefaults(); trendChart?.destroy(); donutChart?.destroy(); trendChart = donutChart = null; render(); };
