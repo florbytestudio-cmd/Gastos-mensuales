@@ -605,6 +605,8 @@ body.locked .wrap, body.locked .fab{display:none}
           </label>
           <label class="f">Mensualidad que te da el banco <input class="inp num" id="fDifMens" inputmode="decimal" autocomplete="off" placeholder="$0.00"></label>
         </div>
+        <label class="f">Comisión por diferir, con IVA (opcional) <input class="inp num" id="fDifCom" inputmode="decimal" autocomplete="off" placeholder="$0.00"></label>
+        <p class="sh-info">Si tu banco cobra una comisión única al diferir (como BBVA), ponla aquí y la mensualidad será sin intereses. Si los intereses ya vienen dentro de la mensualidad, déjala vacía.</p>
         <details class="dif-calc" id="fDifCalc">
           <summary>¿No la sabes? Calcúlala con la tasa</summary>
           <div class="row" style="align-items:end">
@@ -831,6 +833,8 @@ body.locked .wrap, body.locked .fab{display:none}
       </label>
       <label class="f">Mensualidad que te da el banco <input class="inp num" id="dMens" inputmode="decimal" autocomplete="off" placeholder="$0.00"></label>
     </div>
+    <label class="f">Comisión por diferir, con IVA (opcional) <input class="inp num" id="dCom" inputmode="decimal" autocomplete="off" placeholder="$0.00"></label>
+    <p class="sh-info">Si tu banco cobra una comisión única al diferir (como BBVA), ponla aquí y la mensualidad será sin intereses. Si los intereses ya vienen dentro de la mensualidad, déjala vacía.</p>
     <details class="dif-calc" id="dCalc">
       <summary>¿No la sabes? Calcúlala con la tasa</summary>
       <div class="row" style="align-items:end">
@@ -1353,7 +1357,7 @@ function render(){
         const partes = [];
         if (g.nota) partes.push(c.name);
         const tjG = g.tarjetaId && state.tarjetas.find(t => t.id === g.tarjetaId);
-        if (tjG) partes.push(nombreTj(tjG) + (g.msiMeses > 1 ? ` · ${g.msiMeses} MSI` : g.diferido ? ` · diferido ${g.diferido.meses} meses (+${money0.format(g.diferido.mensualidad * g.diferido.meses - g.monto)})` : (g.difPlan && planDe(g.difPlan)) ? ` · diferido con otras compras (${planDe(g.difPlan).plan.meses} meses)` : ''));
+        if (tjG) partes.push(nombreTj(tjG) + (g.msiMeses > 1 ? ` · ${g.msiMeses} MSI` : g.diferido ? ` · diferido ${g.diferido.meses} meses (+${money0.format(g.diferido.comision > 0 ? g.diferido.comision : g.diferido.mensualidad * g.diferido.meses - g.monto)})` : (g.difPlan && planDe(g.difPlan)) ? ` · diferido con otras compras (${planDe(g.difPlan).plan.meses} meses)` : ''));
         else if (g.metodo && MET[g.metodo]) partes.push(MET[g.metodo].name);
         if (g.compartido) partes.push(`tu parte ${money.format(g.compartido.mio)}`);
         b.querySelector('small').textContent = partes.join(' · ');
@@ -1486,11 +1490,24 @@ function mensualidadDif(monto, meses, tasaAnual){
   const i = tasaAnual / 100 / 12 * 1.16;
   return i > 0 ? r2(monto * i / (1 - Math.pow(1 + i, -meses))) : r2(monto / meses);
 }
+// Dos formas de diferir: intereses dentro de la mensualidad, o comisión única + meses sin intereses (BBVA)
+function calcDifObj(monto, meses, mens, comision){
+  comision = comision > 0 ? r2(comision) : 0;
+  const total = r2(mens * meses + comision);   // como lo calcula el banco: mensualidades + comisión
+  return { monto, meses, mens, comision, total, costo: r2(total - monto), pct: (total - monto) / monto * 100 };
+}
+// Revisa que los datos tengan sentido; regresa el texto del problema o ''
+function revisarDif(d){
+  if (d.comision){
+    if (d.mens * d.meses < d.monto - d.meses) return 'Las mensualidades no alcanzan a cubrir lo que difieres. Revisa la mensualidad.';
+    return '';
+  }
+  return d.costo < -0.01 ? 'La mensualidad × meses da menos que la compra. Revisa la mensualidad.' : '';
+}
 function datosDif(){
   const monto = num($('#fMonto').value), meses = parseInt($('#fDifMeses').value, 10), mens = num($('#fDifMens').value);
   if (!(monto > 0) || !(mens > 0)) return null;
-  const total = r2(mens * meses);
-  return { monto, meses, mens, total, costo: r2(total - monto), pct: (total - monto) / monto * 100 };
+  return calcDifObj(monto, meses, mens, num($('#fDifCom').value));
 }
 function infoDif(){
   const box = $('#fDifRes'); box.innerHTML = '';
@@ -1503,21 +1520,33 @@ function pintarResDif(box, d, etiqueta){
   const lns = document.createElement('div'); lns.className = 'lns num';
   const fila = (a, b, cls) => { const x = document.createElement('span'), y = document.createElement('b'); x.textContent = a; y.textContent = b; if (cls) y.className = cls; lns.append(x, y); };
   fila(etiqueta, money.format(d.monto));
-  fila(`Diferida pagarás (${d.meses} × ${money.format(d.mens)})`, money.format(d.total));
-  fila('Te cuesta de más (intereses + IVA)', `${d.costo >= 0 ? '+' : ''}${money.format(d.costo)} (${d.pct >= 0 ? '+' : ''}${d.pct.toFixed(1)}%)`, 'cost');
+  if (d.comision){
+    fila('Comisión por diferir (incluye IVA)', '+' + money.format(d.comision), 'cost');
+    fila('Total a pagar', money.format(d.total));
+    fila('Pagos mensuales', `${d.meses} × ${money.format(d.mens)}`);
+    fila('Te cuesta de más', `+${money.format(d.costo)} (+${d.pct.toFixed(1)}%)`, 'cost');
+  } else {
+    fila(`Diferida pagarás (${d.meses} × ${money.format(d.mens)})`, money.format(d.total));
+    fila('Te cuesta de más (intereses + IVA)', `${d.costo >= 0 ? '+' : ''}${money.format(d.costo)} (${d.pct >= 0 ? '+' : ''}${d.pct.toFixed(1)}%)`, 'cost');
+  }
   box.append(lns);
-  if (d.costo >= 0){
+  const problema = revisarDif(d);
+  if (d.comision && !problema && d.mens * d.meses >= d.monto + d.comision - d.meses)
+    box.append(Object.assign(document.createElement('p'), {className:'warn', textContent:'Parece que la mensualidad ya incluye la comisión. Si es así, deja la comisión vacía.'}));
+  if (problema) box.append(Object.assign(document.createElement('p'), {className:'warn', textContent: problema}));
+  else if (d.costo >= 0){
     const bar = document.createElement('div'); bar.className = 'barra'; bar.setAttribute('role', 'img');
     bar.setAttribute('aria-label', `Compra ${money.format(d.monto)} más ${money.format(d.costo)} de intereses`);
     bar.innerHTML = `<i style="width:${d.monto / d.total * 100}%;background:var(--accent)"></i><i style="width:${d.costo / d.total * 100}%;background:var(--up)"></i>`;
     const lg = document.createElement('div'); lg.className = 'fx-legend'; lg.style.margin = '0';
-    lg.innerHTML = '<span style="--sw:var(--accent)">Compra</span><span style="--sw:var(--up)">Intereses + IVA</span>';
+    lg.innerHTML = `<span style="--sw:var(--accent)">Compra</span><span style="--sw:var(--up)">${d.comision ? 'Comisión' : 'Intereses + IVA'}</span>`;
     box.append(bar, lg);
-  } else box.append(Object.assign(document.createElement('p'), {className:'warn', textContent:'La mensualidad × meses da menos que la compra. Revisa los datos.'}));
+  }
 }
 $('#fDif').addEventListener('change', () => { if ($('#fDif').checked) $('#fMsi').checked = false; pintarTj(); });
 $('#fDifMeses').addEventListener('change', () => { if ($('#fDifTasa').value) calcDif(); infoDif(); });
 $('#fDifMens').addEventListener('input', infoDif);
+$('#fDifCom').addEventListener('input', infoDif);
 function calcDif(){
   const monto = num($('#fMonto').value), tasa = num($('#fDifTasa').value), meses = parseInt($('#fDifMeses').value, 10);
   if (!(monto > 0) || !(tasa >= 0)) return;
@@ -1593,7 +1622,7 @@ function abrir(g, preset){
   $('#fMsi').checked = !!(g && g.msiMeses > 1);
   const dif = g && g.diferido;
   $('#fDif').checked = !!dif; $('#fDifCalc').open = false; $('#fDifTasa').value = dif && dif.tasa != null ? dif.tasa : '';
-  $('#fDifMens').value = dif ? dif.mensualidad : '';
+  $('#fDifMens').value = dif ? dif.mensualidad : ''; $('#fDifCom').value = dif && dif.comision ? dif.comision : '';
   if (dif){
     const sd = $('#fDifMeses');
     if (![...sd.options].some(o => +o.value === dif.meses)) sd.append(new Option(dif.meses, dif.meses));
@@ -1637,8 +1666,8 @@ $('#form').addEventListener('submit', async ev => {
   if (tarjetaId && $('#fDif').checked && !(compartido && vinculado())){
     const d = datosDif();
     if (!d){ $('#fErr').textContent = 'Escribe la mensualidad que te da el banco para diferir la compra'; $('#fDifMens').focus(); return; }
-    if (d.costo < -0.01){ $('#fErr').textContent = 'La mensualidad × meses da menos que la compra. Revisa la mensualidad.'; return; }
-    diferido = { meses: d.meses, mensualidad: r2(d.mens), ...(num($('#fDifTasa').value) >= 0 && $('#fDifTasa').value !== '' ? { tasa: num($('#fDifTasa').value) } : {}) };
+    const prob = revisarDif(d); if (prob){ $('#fErr').textContent = prob; return; }
+    diferido = { meses: d.meses, mensualidad: r2(d.mens), ...(d.comision ? { comision: d.comision } : {}), ...(num($('#fDifTasa').value) >= 0 && $('#fDifTasa').value !== '' ? { tasa: num($('#fDifTasa').value) } : {}) };
   }
 
   // Gasto compartido sincronizado (o uno que deja de serlo)
@@ -2003,7 +2032,8 @@ function msiDeGastos(t, hoy){
     const d = g.diferido && !(g.msiMeses > 1) ? g.diferido : null;
     return {
       id: 'g-' + g.id, gastoId: g.id, desc: g.nota || (CAT[g.cat] || CAT.otros).name,
-      original: g.monto, diferido: !!d, totalPlan: d ? r2(d.mensualidad * d.meses) : g.monto,
+      original: g.monto, diferido: !!d, comision: d && d.comision > 0 ? d.comision : 0,
+      totalPlan: d ? r2(d.mensualidad * d.meses + (d.comision > 0 ? d.comision : 0)) : g.monto,
       saldoRef: d ? r2(d.mensualidad * d.meses) : g.monto,
       mensualidad: d ? d.mensualidad : r2(g.monto / g.msiMeses), total: d ? d.meses : g.msiMeses,
       facturados: 0, corteRef: iso(cortePrevio(t, parse(g.fecha))),
@@ -2013,9 +2043,10 @@ function msiDeGastos(t, hoy){
     if (!gs.length) return null;
     const ultima = gs.map(g => g.fecha).sort().pop();
     if (parse(ultima) > hoy) return null;
-    const original = r2(gs.reduce((a, g) => a + g.monto, 0)), totalPlan = r2(pl.mensualidad * pl.meses);
+    const original = r2(gs.reduce((a, g) => a + g.monto, 0)), comision = pl.comision > 0 ? pl.comision : 0;
+    const totalPlan = r2(pl.mensualidad * pl.meses + comision);
     return { id: 'p-' + pl.id, planId: pl.id, desc: gs.length === 1 ? (gs[0].nota || (CAT[gs[0].cat] || CAT.otros).name) : `Diferido: ${gs.length} compras`,
-      original, diferido: true, totalPlan, saldoRef: totalPlan, mensualidad: pl.mensualidad, total: pl.meses,
+      original, diferido: true, comision, totalPlan, saldoRef: r2(pl.mensualidad * pl.meses), mensualidad: pl.mensualidad, total: pl.meses,
       facturados: 0, corteRef: iso(cortePrevio(t, parse(ultima))) };
   }).filter(Boolean));
 }
@@ -2054,7 +2085,7 @@ function simular(t, hoy = hoy0()){
   while (N <= hoy && guard++ < 240){
     while (i < ev.length && ev[i].f <= N) aplicar(ev[i++]);
     let cuotas = 0;
-    msi.forEach(m => { if (m.cRef < N){ const q = cuotaDe(m); cuotas += q; m.saldo = r2(m.saldo - q); m.hechos++; } });
+    msi.forEach(m => { if (m.cRef < N){ const q = cuotaDe(m); cuotas += q + (m.hechos === 0 ? (m.comision || 0) : 0); m.saldo = r2(m.saldo - q); m.hechos++; } });
     msi = msi.filter(m => m.hechos < m.total && m.saldo > 0.005);
     const arrastre = facturado;
     const total = r2(facturado + periodo + cuotas);
@@ -2063,8 +2094,9 @@ function simular(t, hoy = hoy0()){
     c = N; N = corteSiguiente(t, c);
   }
   while (i < ev.length) aplicar(ev[i++]);
-  const msiProx = r2(msi.reduce((a, m) => a + cuotaDe(m), 0));
-  const msiSaldo = r2(msi.reduce((a, m) => a + m.saldo, 0));
+  const comPend = m => m.hechos === 0 ? (m.comision || 0) : 0;   // la comisión se cobra en el primer corte
+  const msiProx = r2(msi.reduce((a, m) => a + cuotaDe(m) + comPend(m), 0));
+  const msiSaldo = r2(msi.reduce((a, m) => a + m.saldo + comPend(m), 0));
   const transc = Math.max(1, difDias(c, hoy)), largo = difDias(c, N);
   const ritmo = cargos / transc;
   const usado = r2(facturado + periodo + msiSaldo);
@@ -2207,10 +2239,10 @@ function panelTarjeta(t, s){
     const b = document.createElement('button'); b.type = 'button'; b.className = 'msi';
     b.innerHTML = `<b></b><span class="q num"></span><small class="num"></small><small class="r num"></small><div class="mini"><i></i></div>`;
     b.querySelector('b').textContent = m.desc;
-    if (m.diferido) b.querySelector('b').append(Object.assign(document.createElement('span'), {className:'tagd', textContent:`+${money0.format(m.totalPlan - m.original)} intereses`}));
+    if (m.diferido) b.querySelector('b').append(Object.assign(document.createElement('span'), {className:'tagd', textContent: m.comision ? `+${money0.format(m.comision)} comisión` : `+${money0.format(m.totalPlan - m.original)} intereses`}));
     b.querySelector('.q').textContent = money.format(cuotaDe(m));
-    b.querySelector('small').textContent = `Va en ${m.hechos} de ${m.total} · sigue el ${m.hechos + 1} en ${mesN}${m.hechos + 1 >= m.total ? ' (último)' : ''}`;
-    b.querySelector('small.r').textContent = m.diferido ? `saldo ${money.format(m.saldo)} de ${money0.format(m.totalPlan)}` : `saldo ${money.format(m.saldo)} de ${money0.format(m.original)}`;
+    b.querySelector('small').textContent = `Va en ${m.hechos} de ${m.total} · sigue el ${m.hechos + 1} en ${mesN}${m.hechos + 1 >= m.total ? ' (último)' : ''}${m.hechos === 0 && m.comision ? ` + comisión ${money.format(m.comision)}` : ''}`;
+    b.querySelector('small.r').textContent = m.diferido ? `saldo ${money.format(m.saldo)} de ${money0.format(m.saldoRef)}` : `saldo ${money.format(m.saldo)} de ${money0.format(m.original)}`;
     b.querySelector('.mini i').style.width = (m.hechos / m.total * 100) + '%';
     b.addEventListener('click', () => {
       if (m.gastoId){ const g = G().find(x => x.id === m.gastoId); if (g) abrir(g); }
@@ -2749,8 +2781,7 @@ function pintarD(){
   const meses = parseInt($('#dMeses').value, 10), mens = num($('#dMens').value);
   if (!ids.length) return;
   if (!(mens > 0)){ box.append(Object.assign(document.createElement('p'), {className:'sh-info', textContent:'Escribe la mensualidad que te da el banco para ver cuánto pagarás.'})); return; }
-  const total = r2(mens * meses);
-  pintarResDif(box, { monto, meses, mens, total, costo: r2(total - monto), pct: (total - monto) / monto * 100 }, ids.length === 1 ? 'La compra te salió en' : `Las ${ids.length} compras suman`);
+  pintarResDif(box, calcDifObj(monto, meses, mens, num($('#dCom').value)), ids.length === 1 ? 'La compra te salió en' : `Las ${ids.length} compras suman`);
 }
 function abrirDiferir(t, plan){
   dCtx = { t, plan };
@@ -2773,7 +2804,7 @@ function abrirDiferir(t, plan){
   const sd = $('#dMeses');
   if (plan && ![...sd.options].some(o => +o.value === plan.meses)) sd.append(new Option(plan.meses, plan.meses));
   sd.value = String(plan ? plan.meses : 6);
-  $('#dMens').value = plan ? plan.mensualidad : ''; $('#dTasa').value = plan && plan.tasa != null ? plan.tasa : ''; $('#dCalc').open = false;
+  $('#dMens').value = plan ? plan.mensualidad : ''; $('#dCom').value = plan && plan.comision ? plan.comision : ''; $('#dTasa').value = plan && plan.tasa != null ? plan.tasa : ''; $('#dCalc').open = false;
   $('#dDel').hidden = !plan; $('#dSave').textContent = plan ? 'Guardar cambios' : 'Diferir'; $('#dErr').textContent = '';
   pintarD(); dlgD.showModal();
 }
@@ -2787,6 +2818,7 @@ function calcD(){
 $('#dUsar').addEventListener('click', calcD);
 $('#dMeses').addEventListener('change', () => { if ($('#dTasa').value) calcD(); pintarD(); });
 $('#dMens').addEventListener('input', pintarD);
+$('#dCom').addEventListener('input', pintarD);
 $('#dCancel').addEventListener('click', () => dlgD.close());
 $('#formD').addEventListener('submit', ev => {
   ev.preventDefault();
@@ -2794,9 +2826,10 @@ $('#formD').addEventListener('submit', ev => {
   const monto = r2(state.gastos.filter(g => ids.includes(g.id)).reduce((a, g) => a + g.monto, 0));
   if (!ids.length){ $('#dErr').textContent = 'Elige al menos una compra'; return; }
   if (!(mens > 0)){ $('#dErr').textContent = 'Escribe la mensualidad que te da el banco'; $('#dMens').focus(); return; }
-  if (mens * meses < monto - 0.01){ $('#dErr').textContent = 'La mensualidad × meses da menos que lo que suman las compras. Revisa la mensualidad.'; return; }
+  const dd = calcDifObj(monto, meses, mens, num($('#dCom').value)), prob = revisarDif(dd);
+  if (prob){ $('#dErr').textContent = prob.replace('lo que difieres', 'lo que suman las compras').replace('que la compra', 'que lo que suman las compras'); return; }
   const tasaTxt = $('#dTasa').value.trim();
-  const nuevo = { id: plan ? plan.id : 'd' + uid(), gastoIds: ids, meses, mensualidad: mens, ...(tasaTxt !== '' && num(tasaTxt) >= 0 ? { tasa: num(tasaTxt) } : {}), creado: plan ? plan.creado : iso(hoy0()) };
+  const nuevo = { id: plan ? plan.id : 'd' + uid(), gastoIds: ids, meses, mensualidad: mens, ...(dd.comision ? { comision: dd.comision } : {}), ...(tasaTxt !== '' && num(tasaTxt) >= 0 ? { tasa: num(tasaTxt) } : {}), creado: plan ? plan.creado : iso(hoy0()) };
   state.tarjetas = state.tarjetas.map(x => x.id !== t.id ? x : { ...x, planes: plan ? (x.planes || []).map(p => p.id === plan.id ? nuevo : p) : [...(x.planes || []), nuevo] });
   state.gastos = state.gastos.map(g => ids.includes(g.id) ? { ...g, difPlan: nuevo.id } : (g.difPlan === nuevo.id ? { ...g, difPlan: null } : g));
   dlgD.close(); render(); persist();
