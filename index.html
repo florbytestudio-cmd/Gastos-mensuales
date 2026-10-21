@@ -629,6 +629,7 @@ body.locked .wrap, body.locked .fab{display:none}
           <p class="sh-info">Incluye el IVA (16%) sobre los intereses. Es una estimación; la mensualidad exacta es la que te muestra tu banco.</p>
         </details>
         <div class="dif-res" id="fDifRes"></div>
+        <p class="sh-info">Como en tu banco: al diferir, la tarjeta recibe un abono por lo diferido. Ese abono cubre primero lo que te falte pagar de tu corte y lo que sobra baja tu periodo actual; las compras siguen cargadas y pagas el plan en mensualidades.</p>
       </div>
     </div>
     <label class="check"><input type="checkbox" id="fShared"> Gasto compartido con mi pareja</label>
@@ -857,6 +858,7 @@ body.locked .wrap, body.locked .fab{display:none}
       <p class="sh-info">Incluye el IVA (16%) sobre los intereses. Es una estimación; la exacta es la que te muestra tu banco.</p>
     </details>
     <div class="dif-res" id="dRes"></div>
+    <p class="sh-info">Como en tu banco: al diferir, la tarjeta recibe un abono por lo diferido. Ese abono cubre primero lo que te falte pagar de tu corte y lo que sobra baja tu periodo actual; las compras siguen cargadas y pagas el plan en mensualidades.</p>
     <p class="err" id="dErr"></p>
     <div class="actions">
       <button type="button" class="btn danger" id="dDel" hidden>Deshacer diferido</button>
@@ -1739,7 +1741,7 @@ $('#form').addEventListener('submit', async ev => {
     const d = datosDif();
     if (!d){ $('#fErr').textContent = 'Escribe la mensualidad que te da el banco para diferir la compra'; $('#fDifMens').focus(); return; }
     const prob = revisarDif(d); if (prob){ $('#fErr').textContent = prob; return; }
-    diferido = { meses: d.meses, mensualidad: r2(d.mens), ...(d.comision ? { comision: d.comision } : {}), ...(num($('#fDifTasa').value) >= 0 && $('#fDifTasa').value !== '' ? { tasa: num($('#fDifTasa').value) } : {}) };
+    diferido = { fecha: (editando && editando.diferido && editando.diferido.fecha) || iso(hoy0()), meses: d.meses, mensualidad: r2(d.mens), ...(d.comision ? { comision: d.comision } : {}), ...(num($('#fDifTasa').value) >= 0 && $('#fDifTasa').value !== '' ? { tasa: num($('#fDifTasa').value) } : {}) };
   }
 
   // Gasto compartido sincronizado (o uno que deja de serlo)
@@ -2108,13 +2110,14 @@ function msiDeGastos(t, hoy){
       totalPlan: d ? r2(d.mensualidad * d.meses + (d.comision > 0 ? d.comision : 0)) : g.monto,
       saldoRef: d ? r2(d.mensualidad * d.meses) : g.monto,
       mensualidad: d ? d.mensualidad : r2(g.monto / g.msiMeses), total: d ? d.meses : g.msiMeses,
-      facturados: 0, corteRef: iso(cortePrevio(t, parse(g.fecha))),
+      facturados: 0, corteRef: iso(cortePrevio(t, parse(d && d.fecha && d.fecha > g.fecha ? d.fecha : g.fecha))),
     };
   }).concat((t.planes || []).map(pl => {
     const gs = state.gastos.filter(g => g.difPlan === pl.id && g.tarjetaId === t.id);
     if (!gs.length) return null;
-    const ultima = gs.map(g => g.fecha).sort().pop();
+    let ultima = gs.map(g => g.fecha).sort().pop();
     if (parse(ultima) > hoy) return null;
+    if (pl.creado && pl.creado > ultima) ultima = pl.creado;   // los pagos empiezan después de diferir
     const original = r2(gs.reduce((a, g) => a + g.monto, 0)), comision = pl.comision > 0 ? pl.comision : 0;
     const totalPlan = r2(pl.mensualidad * pl.meses + comision);
     return { id: 'p-' + pl.id, planId: pl.id, desc: gs.length === 1 ? (gs[0].nota || (CAT[gs[0].cat] || CAT.otros).name) : `Diferido: ${gs.length} compras`,
@@ -2123,6 +2126,22 @@ function msiDeGastos(t, hoy){
   }).filter(Boolean));
 }
 const msiPlegado = new Set();
+// Al diferir, el banco abona a la tarjeta lo diferido (p. ej. BBVA: "Abono financ. compras").
+// Ese abono cubre primero lo pendiente del corte y lo que sobra baja el saldo del periodo.
+function abonosDiferido(t){
+  const out = [];
+  (t.planes || []).forEach(pl => {
+    const gs = state.gastos.filter(g => g.difPlan === pl.id && g.tarjetaId === t.id);
+    if (!gs.length) return;
+    out.push({ id: 'ab-' + pl.id, virtual: true, fecha: pl.creado || gs.map(g => g.fecha).sort().pop(), monto: r2(gs.reduce((a, g) => a + g.monto, 0)),
+      nota: gs.length === 1 ? 'Abono por diferir 1 compra' : `Abono por diferir ${gs.length} compras` });
+  });
+  state.gastos.forEach(g => {
+    if (g.tarjetaId === t.id && g.diferido && g.diferido.meses > 0 && !(g.msiMeses > 1))
+      out.push({ id: 'ab-' + g.id, virtual: true, fecha: g.diferido.fecha || g.fecha, monto: g.monto, nota: 'Abono por diferir compra' });
+  });
+  return out;
+}
 function planDe(id){
   for (const t of state.tarjetas){ const plan = (t.planes || []).find(p => p.id === id); if (plan) return { t, plan }; }
   return null;
@@ -2141,10 +2160,10 @@ function simular(t, hoy = hoy0()){
     .filter(m => m.hechos < m.total && m.saldo > 0.005);
   const ev = [];
   G().forEach(g => {
-    if (g.tarjetaId !== t.id || g.msiMeses > 1 || g.diferido || (g.difPlan && (t.planes || []).some(p => p.id === g.difPlan))) return;
+    if (g.tarjetaId !== t.id || g.msiMeses > 1) return;   // las diferidas sí son cargos: el banco las "paga" con un abono
     const f = parse(g.fecha); if (f > c && f <= hoy) ev.push({ f, tipo: 'cargo', monto: g.monto, g });
   });
-  (t.abonos || []).forEach(a => { const f = parse(a.fecha); if (f <= hoy) ev.push({ f, tipo: 'abono', monto: a.monto }); });
+  [...(t.abonos || []), ...abonosDiferido(t)].forEach(a => { const f = parse(a.fecha); if (f <= hoy) ev.push({ f, tipo: 'abono', monto: a.monto }); });
   ev.sort((a, b) => a.f - b.f || (a.tipo === 'cargo' ? -1 : 1));
   let i = 0;
   const aplicar = e => {
@@ -2175,8 +2194,8 @@ function simular(t, hoy = hoy0()){
   return {
     c, N, stmt, pendiente: facturado, limite: stmt.limite, diasLimite: difDias(hoy, stmt.limite),
     cargos, periodo, favor: Math.max(0, cargos - periodo), msi, msiProx, msiSaldo,
-    estimado: r2(Math.max(0, periodo) + msiProx),
-    proyeccion: r2(Math.max(0, ritmo * largo - (cargos - periodo)) + msiProx),
+    estimado: r2(Math.max(0, periodo + msiProx)),            // un saldo a favor también cubre las mensualidades
+    proyeccion: r2(Math.max(0, ritmo * largo - (cargos - periodo) + msiProx)),
     usado, disponible: r2((t.limite || 0) - usado), transc, largo, ritmo, movCiclo, extraVivo,
   };
 }
@@ -2327,17 +2346,18 @@ function panelTarjeta(t, s){
   el.append(dm);
 
   // pagos registrados
-  const ab = (t.abonos || []).slice().sort((a, b) => b.fecha.localeCompare(a.fecha));
+  const ab = [...(t.abonos || []), ...abonosDiferido(t)].sort((a, b) => b.fecha.localeCompare(a.fecha));
   if (ab.length){
     const da = document.createElement('details'); da.className = 'tj-sec';
-    da.innerHTML = `<summary>Pagos registrados<span class="num"></span></summary>`;
+    da.innerHTML = `<summary>Pagos y abonos<span class="num"></span></summary>`;
     da.querySelector('summary span').textContent = `${ab.length} · último ${fCorta(parse(ab[0].fecha))}`;
     ab.slice(0, 8).forEach(a => {
       const r = document.createElement('div'); r.className = 'ab';
       r.innerHTML = `<span></span><b class="num"></b><button type="button" aria-label="Eliminar pago">✕</button>`;
       r.querySelector('span').textContent = fCorta(parse(a.fecha)) + (a.nota ? ' · ' + a.nota : '');
       r.querySelector('b').textContent = money.format(a.monto);
-      r.querySelector('button').addEventListener('click', () => borrarAbono(t.id, a));
+      if (a.virtual) r.querySelector('button').remove();   // sale del diferido; se quita deshaciendo el diferido
+      else r.querySelector('button').addEventListener('click', () => borrarAbono(t.id, a));
       da.append(r);
     });
     el.append(da);
