@@ -304,6 +304,34 @@ select.inp{appearance:auto}
 .pills{display:flex;gap:8px;flex-wrap:wrap}
 details.f > summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 0}
 
+/* Diferir con intereses */
+.dif{display:grid;gap:10px;padding:12px;border-radius:14px;background:var(--surface);border:1px dashed color-mix(in srgb,var(--up) 45%,var(--line))}
+.dif[hidden]{display:none}
+.dif-calc > summary{cursor:pointer;font-size:.86rem;font-weight:600;color:var(--ink-2);padding:2px 0}
+.dif-calc[open]{display:grid;gap:8px}
+.dif-res:empty{display:none}
+.dif-res{display:grid;gap:8px}
+.dif-res .lns{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:.9rem}
+.dif-res .lns span{color:var(--ink-2)}
+.dif-res .lns b{font-weight:800;text-align:right}
+.dif-res .lns .cost{color:var(--up)}
+.dif-res .barra{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--surface-2)}
+.dif-res .barra i{display:block;height:100%}
+.dif-res .warn{margin:0;font-size:.84rem;color:var(--up);font-weight:600}
+.msi .tagd{display:inline-block;margin-left:6px;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--up) 14%,transparent);color:var(--up);vertical-align:1px}
+
+.dlist{display:grid;gap:6px;max-height:300px;overflow:auto;padding:2px}
+.dlist .grp{font-size:.8rem;font-weight:700;color:var(--ink-2);margin:6px 2px 0}
+.dlist label{display:grid;grid-template-columns:22px 1fr auto;gap:2px 10px;align-items:center;padding:10px 12px;border:2px solid var(--line);border-radius:12px;background:var(--surface-2);cursor:pointer}
+.dlist label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.dlist input{width:20px;height:20px;accent-color:var(--accent);margin:0;grid-row:span 2}
+.dlist b{font-weight:600;font-size:.92rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dlist .m{font-weight:800;text-align:right;grid-row:span 2}
+.dlist small{color:var(--ink-2);font-size:.78rem}
+.dlist .vacio{color:var(--ink-2);font-size:.9rem;padding:8px 2px}
+.dsel{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface-2);font-size:.92rem}
+.dsel b{font-size:1.15rem;font-weight:800}
+
 /* Pareja */
 .dlg [hidden]{display:none !important}
 .dlg .who{display:flex;gap:8px}
@@ -568,6 +596,25 @@ body.locked .wrap, body.locked .fab{display:none}
         </label>
         <p class="sub" id="fMsiInfo" style="margin:auto 0 12px;color:var(--ink-2);font-size:.88rem"></p>
       </div>
+      <label class="check" id="fDifLbl" style="background:var(--surface)"><input type="checkbox" id="fDif"> Diferir con intereses (lo difiero en la app del banco)</label>
+      <p class="sh-info" id="fPlanInfo" hidden></p>
+      <div class="dif" id="fDifBox" hidden>
+        <div class="row">
+          <label class="f" style="flex:0 1 110px">Meses
+            <select class="inp" id="fDifMeses"><option>3</option><option selected>6</option><option>9</option><option>12</option><option>18</option><option>24</option><option>36</option></select>
+          </label>
+          <label class="f">Mensualidad que te da el banco <input class="inp num" id="fDifMens" inputmode="decimal" autocomplete="off" placeholder="$0.00"></label>
+        </div>
+        <details class="dif-calc" id="fDifCalc">
+          <summary>¿No la sabes? Calcúlala con la tasa</summary>
+          <div class="row" style="align-items:end">
+            <label class="f">Tasa anual (%) <input class="inp num" id="fDifTasa" inputmode="decimal" placeholder="Ej. 26"></label>
+            <button type="button" class="btn plain" id="fDifUsar" style="flex:0 1 auto">Calcular</button>
+          </div>
+          <p class="sh-info">Incluye el IVA (16%) sobre los intereses. Es una estimación; la mensualidad exacta es la que te muestra tu banco.</p>
+        </details>
+        <div class="dif-res" id="fDifRes"></div>
+      </div>
     </div>
     <label class="check"><input type="checkbox" id="fShared"> Gasto compartido con mi pareja</label>
     <div class="share" id="fShare" hidden>
@@ -768,6 +815,36 @@ body.locked .wrap, body.locked .fab{display:none}
       <button type="button" class="btn danger" id="cpDel" hidden>Quitar pago</button>
       <button type="button" class="btn plain" id="cpCancel">Cancelar</button>
       <button type="submit" class="btn primary" id="cpSave">Guardar pago</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgD">
+  <form class="dlg" method="dialog" id="formD" novalidate>
+    <h3 id="dTitle">Diferir compras</h3>
+    <p class="sub" style="margin:-6px 0 0;color:var(--ink-2);font-size:.88rem">Palomea las compras que difieres juntas en la app de tu banco.</p>
+    <div class="dlist" id="dList" role="group" aria-label="Compras"></div>
+    <div class="dsel num" id="dSel"></div>
+    <div class="row">
+      <label class="f" style="flex:0 1 110px">Meses
+        <select class="inp" id="dMeses"><option>3</option><option selected>6</option><option>9</option><option>12</option><option>18</option><option>24</option><option>36</option></select>
+      </label>
+      <label class="f">Mensualidad que te da el banco <input class="inp num" id="dMens" inputmode="decimal" autocomplete="off" placeholder="$0.00"></label>
+    </div>
+    <details class="dif-calc" id="dCalc">
+      <summary>¿No la sabes? Calcúlala con la tasa</summary>
+      <div class="row" style="align-items:end">
+        <label class="f">Tasa anual (%) <input class="inp num" id="dTasa" inputmode="decimal" placeholder="Ej. 26"></label>
+        <button type="button" class="btn plain" id="dUsar" style="flex:0 1 auto">Calcular</button>
+      </div>
+      <p class="sh-info">Incluye el IVA (16%) sobre los intereses. Es una estimación; la exacta es la que te muestra tu banco.</p>
+    </details>
+    <div class="dif-res" id="dRes"></div>
+    <p class="err" id="dErr"></p>
+    <div class="actions">
+      <button type="button" class="btn danger" id="dDel" hidden>Deshacer diferido</button>
+      <button type="button" class="btn plain" id="dCancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="dSave">Diferir</button>
     </div>
   </form>
 </dialog>
@@ -1276,7 +1353,7 @@ function render(){
         const partes = [];
         if (g.nota) partes.push(c.name);
         const tjG = g.tarjetaId && state.tarjetas.find(t => t.id === g.tarjetaId);
-        if (tjG) partes.push(nombreTj(tjG) + (g.msiMeses > 1 ? ` · ${g.msiMeses} MSI` : ''));
+        if (tjG) partes.push(nombreTj(tjG) + (g.msiMeses > 1 ? ` · ${g.msiMeses} MSI` : g.diferido ? ` · diferido ${g.diferido.meses} meses (+${money0.format(g.diferido.mensualidad * g.diferido.meses - g.monto)})` : (g.difPlan && planDe(g.difPlan)) ? ` · diferido con otras compras (${planDe(g.difPlan).plan.meses} meses)` : ''));
         else if (g.metodo && MET[g.metodo]) partes.push(MET[g.metodo].name);
         if (g.compartido) partes.push(`tu parte ${money.format(g.compartido.mio)}`);
         b.querySelector('small').textContent = partes.join(' · ');
@@ -1381,6 +1458,13 @@ function pintarTj(){
   wrap.hidden = !(metSel === 'credito' && state.tarjetas.length) || pagaPareja();
   const sinMsi = $('#fShared').checked && vinculado();
   $('#fMsiLbl').hidden = sinMsi; if (sinMsi) $('#fMsi').checked = false;
+  $('#fDifLbl').hidden = sinMsi; if (sinMsi) $('#fDif').checked = false;
+  const enPlan = editando && editando.difPlan && planDe(editando.difPlan);
+  $('#fPlanInfo').hidden = !enPlan;
+  if (enPlan){
+    $('#fMsiLbl').hidden = true; $('#fDifLbl').hidden = true; $('#fMsi').checked = false; $('#fDif').checked = false;
+    $('#fPlanInfo').textContent = `Esta compra está diferida junto con otras (${enPlan.plan.gastoIds.length} compras, ${enPlan.plan.meses} meses). Para cambiarlo, toca el plan en Tarjetas.`;
+  }
   if (wrap.hidden) return;
   if (!state.tarjetas.some(t => t.id === tjSel)) tjSel = state.tarjetas[0].id;
   const ch = $('#tjChips'); ch.innerHTML = '';
@@ -1394,15 +1478,59 @@ function pintarTj(){
     ch.append(b);
   });
   $('#fMsiBox').hidden = !$('#fMsi').checked;
-  infoMsi();
+  $('#fDifBox').hidden = !$('#fDif').checked;
+  infoMsi(); infoDif();
 }
+// Diferir: mensualidad estimada con tasa anual + IVA sobre intereses
+function mensualidadDif(monto, meses, tasaAnual){
+  const i = tasaAnual / 100 / 12 * 1.16;
+  return i > 0 ? r2(monto * i / (1 - Math.pow(1 + i, -meses))) : r2(monto / meses);
+}
+function datosDif(){
+  const monto = num($('#fMonto').value), meses = parseInt($('#fDifMeses').value, 10), mens = num($('#fDifMens').value);
+  if (!(monto > 0) || !(mens > 0)) return null;
+  const total = r2(mens * meses);
+  return { monto, meses, mens, total, costo: r2(total - monto), pct: (total - monto) / monto * 100 };
+}
+function infoDif(){
+  const box = $('#fDifRes'); box.innerHTML = '';
+  if (!$('#fDif').checked) return;
+  const d = datosDif();
+  if (!d){ box.append(Object.assign(document.createElement('p'), {className:'sh-info', textContent: num($('#fMonto').value) > 0 ? 'Escribe la mensualidad que te da el banco para ver cuánto te sale.' : 'Primero escribe cuánto costó la compra.'})); return; }
+  pintarResDif(box, d, 'La compra te salió en');
+}
+function pintarResDif(box, d, etiqueta){
+  const lns = document.createElement('div'); lns.className = 'lns num';
+  const fila = (a, b, cls) => { const x = document.createElement('span'), y = document.createElement('b'); x.textContent = a; y.textContent = b; if (cls) y.className = cls; lns.append(x, y); };
+  fila(etiqueta, money.format(d.monto));
+  fila(`Diferida pagarás (${d.meses} × ${money.format(d.mens)})`, money.format(d.total));
+  fila('Te cuesta de más (intereses + IVA)', `${d.costo >= 0 ? '+' : ''}${money.format(d.costo)} (${d.pct >= 0 ? '+' : ''}${d.pct.toFixed(1)}%)`, 'cost');
+  box.append(lns);
+  if (d.costo >= 0){
+    const bar = document.createElement('div'); bar.className = 'barra'; bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', `Compra ${money.format(d.monto)} más ${money.format(d.costo)} de intereses`);
+    bar.innerHTML = `<i style="width:${d.monto / d.total * 100}%;background:var(--accent)"></i><i style="width:${d.costo / d.total * 100}%;background:var(--up)"></i>`;
+    const lg = document.createElement('div'); lg.className = 'fx-legend'; lg.style.margin = '0';
+    lg.innerHTML = '<span style="--sw:var(--accent)">Compra</span><span style="--sw:var(--up)">Intereses + IVA</span>';
+    box.append(bar, lg);
+  } else box.append(Object.assign(document.createElement('p'), {className:'warn', textContent:'La mensualidad × meses da menos que la compra. Revisa los datos.'}));
+}
+$('#fDif').addEventListener('change', () => { if ($('#fDif').checked) $('#fMsi').checked = false; pintarTj(); });
+$('#fDifMeses').addEventListener('change', () => { if ($('#fDifTasa').value) calcDif(); infoDif(); });
+$('#fDifMens').addEventListener('input', infoDif);
+function calcDif(){
+  const monto = num($('#fMonto').value), tasa = num($('#fDifTasa').value), meses = parseInt($('#fDifMeses').value, 10);
+  if (!(monto > 0) || !(tasa >= 0)) return;
+  $('#fDifMens').value = mensualidadDif(monto, meses, tasa); infoDif();
+}
+$('#fDifUsar').addEventListener('click', calcDif);
 function infoMsi(){
   const m = num($('#fMonto').value), n = parseInt($('#fMsiMeses').value, 10);
   $('#fMsiInfo').textContent = m > 0 ? `${money.format(r2(m / n))} al mes por ${n} meses` : '';
 }
-$('#fMsi').addEventListener('change', pintarTj);
+$('#fMsi').addEventListener('change', () => { if ($('#fMsi').checked) $('#fDif').checked = false; pintarTj(); });
 $('#fMsiMeses').addEventListener('change', infoMsi);
-$('#fMonto').addEventListener('input', infoMsi);
+$('#fMonto').addEventListener('input', () => { infoMsi(); infoDif(); });
 const num = v => parseFloat(String(v).replace(/[$,\s]/g,''));
 const r2 = v => Math.round(v*100)/100;
 function montoForm(){ const v = num($('#fMonto').value); return v > 0 ? v : 0; }
@@ -1463,6 +1591,14 @@ function abrir(g, preset){
   barraSplit();
   if (g && g.tarjetaId) tjSel = g.tarjetaId;
   $('#fMsi').checked = !!(g && g.msiMeses > 1);
+  const dif = g && g.diferido;
+  $('#fDif').checked = !!dif; $('#fDifCalc').open = false; $('#fDifTasa').value = dif && dif.tasa != null ? dif.tasa : '';
+  $('#fDifMens').value = dif ? dif.mensualidad : '';
+  if (dif){
+    const sd = $('#fDifMeses');
+    if (![...sd.options].some(o => +o.value === dif.meses)) sd.append(new Option(dif.meses, dif.meses));
+    sd.value = String(dif.meses);
+  } else $('#fDifMeses').value = '6';
   if (g && g.msiMeses > 1){
     const sel = $('#fMsiMeses');
     if (![...sel.options].some(o => +o.value === g.msiMeses)) sel.append(new Option(g.msiMeses, g.msiMeses));
@@ -1497,6 +1633,13 @@ $('#form').addEventListener('submit', async ev => {
   }
   const tarjetaId = metSel === 'credito' && state.tarjetas.some(t => t.id === tjSel) ? tjSel : null;
   const msiMeses = tarjetaId && $('#fMsi').checked ? parseInt($('#fMsiMeses').value, 10) : null;
+  let diferido = null;
+  if (tarjetaId && $('#fDif').checked && !(compartido && vinculado())){
+    const d = datosDif();
+    if (!d){ $('#fErr').textContent = 'Escribe la mensualidad que te da el banco para diferir la compra'; $('#fDifMens').focus(); return; }
+    if (d.costo < -0.01){ $('#fErr').textContent = 'La mensualidad × meses da menos que la compra. Revisa la mensualidad.'; return; }
+    diferido = { meses: d.meses, mensualidad: r2(d.mens), ...(num($('#fDifTasa').value) >= 0 && $('#fDifTasa').value !== '' ? { tasa: num($('#fDifTasa').value) } : {}) };
+  }
 
   // Gasto compartido sincronizado (o uno que deja de serlo)
   if ((compartido && vinculado()) || (editando && editando.shared)){
@@ -1505,7 +1648,7 @@ $('#form').addEventListener('submit', async ev => {
       if (editando && editando.shared && !compartido){
         const { error } = await sb.from('gastos_compartidos').delete().eq('id', editando.shId); if (error) throw error;
         setComp(compRows.filter(r => r.id !== editando.shId));
-        state.gastos = [...state.gastos, {id:uid(), monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido:null, tarjetaId, msiMeses, creado:Date.now()}];
+        state.gastos = [...state.gastos, {id:uid(), monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido:null, tarjetaId, msiMeses, diferido, creado:Date.now()}];
         persist();
         toast('Ya no es compartido: quedó solo en tu cuenta');
       } else {
@@ -1545,10 +1688,10 @@ $('#form').addEventListener('submit', async ev => {
   }
 
   if (editando){
-    state.gastos = state.gastos.map(g => g.id === editando.id ? {...g, monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido, tarjetaId, msiMeses} : g);
+    state.gastos = state.gastos.map(g => g.id === editando.id ? {...g, monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido, tarjetaId, msiMeses, diferido} : g);
     toast('Cambios guardados');
   } else {
-    state.gastos = [...state.gastos, {id:uid(), monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido, tarjetaId, msiMeses, creado:Date.now()}];
+    state.gastos = [...state.gastos, {id:uid(), monto:m, cat:catSel, fecha, nota, metodo:metSel, compartido, tarjetaId, msiMeses, diferido, creado:Date.now()}];
     toast(`${CAT[catSel].name}: ${money.format(m)} agregado`);
   }
   dlg.close();
@@ -1856,11 +1999,30 @@ const cuotaDe = m => (m.hechos + 1 >= m.total) ? m.saldo : Math.min(m.mensualida
 
 // Compras a MSI capturadas como gasto (se derivan, no se duplican)
 function msiDeGastos(t, hoy){
-  return state.gastos.filter(g => g.tarjetaId === t.id && g.msiMeses > 1 && parse(g.fecha) <= hoy).map(g => ({
-    id: 'g-' + g.id, gastoId: g.id, desc: g.nota || (CAT[g.cat] || CAT.otros).name,
-    original: g.monto, saldoRef: g.monto, mensualidad: r2(g.monto / g.msiMeses), total: g.msiMeses,
-    facturados: 0, corteRef: iso(cortePrevio(t, parse(g.fecha))),
-  }));
+  return state.gastos.filter(g => g.tarjetaId === t.id && (g.msiMeses > 1 || (g.diferido && g.diferido.meses > 0)) && parse(g.fecha) <= hoy).map(g => {
+    const d = g.diferido && !(g.msiMeses > 1) ? g.diferido : null;
+    return {
+      id: 'g-' + g.id, gastoId: g.id, desc: g.nota || (CAT[g.cat] || CAT.otros).name,
+      original: g.monto, diferido: !!d, totalPlan: d ? r2(d.mensualidad * d.meses) : g.monto,
+      saldoRef: d ? r2(d.mensualidad * d.meses) : g.monto,
+      mensualidad: d ? d.mensualidad : r2(g.monto / g.msiMeses), total: d ? d.meses : g.msiMeses,
+      facturados: 0, corteRef: iso(cortePrevio(t, parse(g.fecha))),
+    };
+  }).concat((t.planes || []).map(pl => {
+    const gs = state.gastos.filter(g => g.difPlan === pl.id && g.tarjetaId === t.id);
+    if (!gs.length) return null;
+    const ultima = gs.map(g => g.fecha).sort().pop();
+    if (parse(ultima) > hoy) return null;
+    const original = r2(gs.reduce((a, g) => a + g.monto, 0)), totalPlan = r2(pl.mensualidad * pl.meses);
+    return { id: 'p-' + pl.id, planId: pl.id, desc: gs.length === 1 ? (gs[0].nota || (CAT[gs[0].cat] || CAT.otros).name) : `Diferido: ${gs.length} compras`,
+      original, diferido: true, totalPlan, saldoRef: totalPlan, mensualidad: pl.mensualidad, total: pl.meses,
+      facturados: 0, corteRef: iso(cortePrevio(t, parse(ultima))) };
+  }).filter(Boolean));
+}
+const msiPlegado = new Set();
+function planDe(id){
+  for (const t of state.tarjetas){ const plan = (t.planes || []).find(p => p.id === id); if (plan) return { t, plan }; }
+  return null;
 }
 
 // Recorre los cortes desde el saldo de arranque hasta hoy
@@ -1876,7 +2038,7 @@ function simular(t, hoy = hoy0()){
     .filter(m => m.hechos < m.total && m.saldo > 0.005);
   const ev = [];
   G().forEach(g => {
-    if (g.tarjetaId !== t.id || g.msiMeses > 1) return;
+    if (g.tarjetaId !== t.id || g.msiMeses > 1 || g.diferido || (g.difPlan && (t.planes || []).some(p => p.id === g.difPlan))) return;
     const f = parse(g.fecha); if (f > c && f <= hoy) ev.push({ f, tipo: 'cargo', monto: g.monto, g });
   });
   (t.abonos || []).forEach(a => { const f = parse(a.fecha); if (f <= hoy) ev.push({ f, tipo: 'abono', monto: a.monto }); });
@@ -2036,20 +2198,23 @@ function panelTarjeta(t, s){
   el.append(u);
 
   // MSI
-  const dm = document.createElement('details'); dm.className = 'tj-sec'; dm.open = s.msi.length > 0 && s.msi.length <= 8;
-  dm.innerHTML = `<summary>Meses sin intereses<span class="num"></span></summary>`;
+  const dm = document.createElement('details'); dm.className = 'tj-sec'; dm.open = s.msi.length > 0 && !msiPlegado.has(t.id);
+  dm.addEventListener('toggle', () => { if (dm.open) msiPlegado.delete(t.id); else msiPlegado.add(t.id); });
+  dm.innerHTML = `<summary>${s.msi.some(m => m.diferido) ? 'A meses (MSI y diferidos)' : 'Meses sin intereses'}<span class="num"></span></summary>`;
   dm.querySelector('summary span').textContent = s.msi.length ? `${money.format(s.msiSaldo)} por pagar · ${money.format(s.msiProx)} este corte` : 'ninguna';
   const mesN = fmtD(s.N, {month:'short'}).replace('.', '');
   s.msi.slice().sort((a, b) => b.saldo - a.saldo).forEach(m => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'msi';
     b.innerHTML = `<b></b><span class="q num"></span><small class="num"></small><small class="r num"></small><div class="mini"><i></i></div>`;
     b.querySelector('b').textContent = m.desc;
+    if (m.diferido) b.querySelector('b').append(Object.assign(document.createElement('span'), {className:'tagd', textContent:`+${money0.format(m.totalPlan - m.original)} intereses`}));
     b.querySelector('.q').textContent = money.format(cuotaDe(m));
     b.querySelector('small').textContent = `Va en ${m.hechos} de ${m.total} · sigue el ${m.hechos + 1} en ${mesN}${m.hechos + 1 >= m.total ? ' (último)' : ''}`;
-    b.querySelector('small.r').textContent = `saldo ${money.format(m.saldo)} de ${money0.format(m.original)}`;
+    b.querySelector('small.r').textContent = m.diferido ? `saldo ${money.format(m.saldo)} de ${money0.format(m.totalPlan)}` : `saldo ${money.format(m.saldo)} de ${money0.format(m.original)}`;
     b.querySelector('.mini i').style.width = (m.hechos / m.total * 100) + '%';
     b.addEventListener('click', () => {
       if (m.gastoId){ const g = G().find(x => x.id === m.gastoId); if (g) abrir(g); }
+      else if (m.planId){ const pl = (t.planes || []).find(p => p.id === m.planId); if (pl) abrirDiferir(t, pl); }
       else abrirMsi(t, m, s);
     });
     dm.append(b);
@@ -2076,9 +2241,10 @@ function panelTarjeta(t, s){
 
   // acciones
   const act = document.createElement('div'); act.className = 'tj-act';
-  act.innerHTML = `<button type="button" class="btn primary">Registrar pago</button><button type="button" class="btn plain">+ Compra a MSI</button>`;
+  act.innerHTML = `<button type="button" class="btn primary">Registrar pago</button><button type="button" class="btn plain">Diferir compras</button><button type="button" class="btn plain">+ Compra a MSI</button>`;
+  act.children[2].addEventListener('click', () => abrirMsi(t, null, s));
   act.children[0].addEventListener('click', () => abrirAbono(t.id));
-  act.children[1].addEventListener('click', () => abrirMsi(t, null, s));
+  act.children[1].addEventListener('click', () => abrirDiferir(t, null));
   el.append(act);
   return el;
 }
@@ -2559,6 +2725,89 @@ $('#cDel').addEventListener('click', async () => {
   if (!confirm(`¿Eliminar “${cEdit.nombre}” de la casa? Los pagos ya registrados se conservan.`)) return;
   try { await guardarCasa(conceptosCasa().filter(c => c.id !== cEdit.id)); } catch(e){ $('#cErr').textContent = 'No se pudo eliminar. Revisa tu conexión.'; return; }
   cargarC(null); toast('Concepto eliminado');
+});
+
+// ---------- diferir varias compras juntas ----------
+const dlgD = $('#dlgD'); let dCtx = null;
+function comprasDiferibles(t, plan){
+  // Compras con esta tarjeta del corte anterior y del periodo actual que no son MSI ni ya diferidas
+  const hoy = hoy0(), c1 = cortePrevio(t, new Date(hoy.getTime() + 864e5)), c0 = cortePrevio(t, c1);
+  return state.gastos.filter(g => g.tarjetaId === t.id && !(g.msiMeses > 1) && !g.diferido
+      && (!g.difPlan || (plan && g.difPlan === plan.id) || !planDe(g.difPlan))
+      && (parse(g.fecha) > c0 || (plan && g.difPlan === plan.id)) && parse(g.fecha) <= hoy)
+    .sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.creado || 0) - (a.creado || 0))
+    .map(g => ({ g, actual: parse(g.fecha) > c1 }));
+}
+function seleccionD(){ return [...$('#dList').querySelectorAll('input:checked')].map(i => i.value); }
+function pintarD(){
+  const ids = seleccionD(), gs = state.gastos.filter(g => ids.includes(g.id));
+  const monto = r2(gs.reduce((a, g) => a + g.monto, 0));
+  const sel = $('#dSel'); sel.innerHTML = '';
+  sel.append(Object.assign(document.createElement('span'), {textContent: ids.length ? `${ids.length} ${ids.length === 1 ? 'compra seleccionada' : 'compras seleccionadas'}` : 'Elige al menos una compra'}),
+             Object.assign(document.createElement('b'), {textContent: money.format(monto)}));
+  const box = $('#dRes'); box.innerHTML = '';
+  const meses = parseInt($('#dMeses').value, 10), mens = num($('#dMens').value);
+  if (!ids.length) return;
+  if (!(mens > 0)){ box.append(Object.assign(document.createElement('p'), {className:'sh-info', textContent:'Escribe la mensualidad que te da el banco para ver cuánto pagarás.'})); return; }
+  const total = r2(mens * meses);
+  pintarResDif(box, { monto, meses, mens, total, costo: r2(total - monto), pct: (total - monto) / monto * 100 }, ids.length === 1 ? 'La compra te salió en' : `Las ${ids.length} compras suman`);
+}
+function abrirDiferir(t, plan){
+  dCtx = { t, plan };
+  const lista = comprasDiferibles(t, plan), box = $('#dList'); box.innerHTML = '';
+  $('#dTitle').textContent = plan ? `Compras diferidas · ${t.nombre}` : `Diferir compras · ${t.nombre}`;
+  if (!lista.length) box.append(Object.assign(document.createElement('p'), {className:'vacio', textContent:'No hay compras recientes con esta tarjeta para diferir. Las compras a MSI o ya diferidas no aparecen aquí.'}));
+  let grp = null;
+  lista.forEach(({ g, actual }) => {
+    const nombre = actual ? 'Periodo actual' : 'Corte anterior';
+    if (nombre !== grp){ grp = nombre; box.append(Object.assign(document.createElement('div'), {className:'grp', textContent: nombre})); }
+    const c = CAT[g.cat] || CAT.otros, l = document.createElement('label');
+    l.innerHTML = `<input type="checkbox"><b></b><span class="m num"></span><small></small>`;
+    const inp = l.querySelector('input'); inp.value = g.id; inp.checked = !!(plan && plan.gastoIds.includes(g.id));
+    inp.addEventListener('change', pintarD);
+    l.querySelector('b').textContent = `${c.ico} ${g.nota || c.name}`;
+    l.querySelector('.m').textContent = money.format(g.monto);
+    l.querySelector('small').textContent = fmtD(parse(g.fecha), {weekday:'short', day:'numeric', month:'short'});
+    box.append(l);
+  });
+  const sd = $('#dMeses');
+  if (plan && ![...sd.options].some(o => +o.value === plan.meses)) sd.append(new Option(plan.meses, plan.meses));
+  sd.value = String(plan ? plan.meses : 6);
+  $('#dMens').value = plan ? plan.mensualidad : ''; $('#dTasa').value = plan && plan.tasa != null ? plan.tasa : ''; $('#dCalc').open = false;
+  $('#dDel').hidden = !plan; $('#dSave').textContent = plan ? 'Guardar cambios' : 'Diferir'; $('#dErr').textContent = '';
+  pintarD(); dlgD.showModal();
+}
+function calcD(){
+  const ids = seleccionD(), monto = state.gastos.filter(g => ids.includes(g.id)).reduce((a, g) => a + g.monto, 0);
+  const tasa = num($('#dTasa').value), meses = parseInt($('#dMeses').value, 10);
+  if (!(monto > 0)){ $('#dErr').textContent = 'Primero elige las compras'; return; }
+  if (!(tasa >= 0)){ $('#dErr').textContent = 'Escribe la tasa anual'; return; }
+  $('#dErr').textContent = ''; $('#dMens').value = mensualidadDif(monto, meses, tasa); pintarD();
+}
+$('#dUsar').addEventListener('click', calcD);
+$('#dMeses').addEventListener('change', () => { if ($('#dTasa').value) calcD(); pintarD(); });
+$('#dMens').addEventListener('input', pintarD);
+$('#dCancel').addEventListener('click', () => dlgD.close());
+$('#formD').addEventListener('submit', ev => {
+  ev.preventDefault();
+  const { t, plan } = dCtx, ids = seleccionD(), meses = parseInt($('#dMeses').value, 10), mens = r2(num($('#dMens').value));
+  const monto = r2(state.gastos.filter(g => ids.includes(g.id)).reduce((a, g) => a + g.monto, 0));
+  if (!ids.length){ $('#dErr').textContent = 'Elige al menos una compra'; return; }
+  if (!(mens > 0)){ $('#dErr').textContent = 'Escribe la mensualidad que te da el banco'; $('#dMens').focus(); return; }
+  if (mens * meses < monto - 0.01){ $('#dErr').textContent = 'La mensualidad × meses da menos que lo que suman las compras. Revisa la mensualidad.'; return; }
+  const tasaTxt = $('#dTasa').value.trim();
+  const nuevo = { id: plan ? plan.id : 'd' + uid(), gastoIds: ids, meses, mensualidad: mens, ...(tasaTxt !== '' && num(tasaTxt) >= 0 ? { tasa: num(tasaTxt) } : {}), creado: plan ? plan.creado : iso(hoy0()) };
+  state.tarjetas = state.tarjetas.map(x => x.id !== t.id ? x : { ...x, planes: plan ? (x.planes || []).map(p => p.id === plan.id ? nuevo : p) : [...(x.planes || []), nuevo] });
+  state.gastos = state.gastos.map(g => ids.includes(g.id) ? { ...g, difPlan: nuevo.id } : (g.difPlan === nuevo.id ? { ...g, difPlan: null } : g));
+  dlgD.close(); render(); persist();
+  toast(`${ids.length} ${ids.length === 1 ? 'compra diferida' : 'compras diferidas'} a ${meses} meses: ${money.format(mens)} al mes`);
+});
+$('#dDel').addEventListener('click', () => {
+  const { t, plan } = dCtx;
+  if (!confirm('¿Deshacer este diferido? Las compras regresan normales a la tarjeta.')) return;
+  state.tarjetas = state.tarjetas.map(x => x.id !== t.id ? x : { ...x, planes: (x.planes || []).filter(p => p.id !== plan.id) });
+  state.gastos = state.gastos.map(g => g.difPlan === plan.id ? { ...g, difPlan: null } : g);
+  dlgD.close(); render(); persist(); toast('Diferido deshecho');
 });
 
 // ---------- toast ----------
