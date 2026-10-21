@@ -126,6 +126,8 @@ section.grid + section.grid{margin-top:18px}
 .mov .txt b{display:block;font-weight:600}
 .mov .txt small{display:block;color:var(--ink-2);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mov .m{font-weight:700}
+.mov.fin .m{text-decoration:line-through;color:var(--ink-2);font-weight:600}
+.mov.cuota .dot{outline:2px dashed color-mix(in srgb,var(--ink-2) 40%,transparent);outline-offset:-2px}
 .list{max-height:520px;overflow:auto;margin:0 -8px;padding:0 8px}
 .empty{color:var(--ink-2);padding:18px 0;font-size:.95rem}
 
@@ -928,8 +930,17 @@ const rango = (v, d) => { const s = startOf(v, d); return [s, addP(v, s, 1)]; };
 // ---------- pareja: gastos compartidos sincronizados ----------
 let tCasa = null;
 let pareja = null, miVinculo = null, miEmail = '', compEstado = 'cargando', compRows = [], compG = [], canalComp = null, tComp = null;
-const cuenta = g => g.compartido ? (+g.compartido.mio || 0) : g.monto;   // cada quien cuenta solo su parte
-const G = () => compG.length ? state.gastos.concat(compG) : state.gastos;
+// Compras a MSI o diferidas: no suman completas; suman sus mensualidades en el mes de cada corte
+const financiado = g => !g.virtual && !!g.tarjetaId && (g.msiMeses > 1 || !!(g.diferido && g.diferido.meses > 0) || !!(g.difPlan && planDe(g.difPlan)));
+const cuenta = g => g.virtual ? g.monto : financiado(g) ? 0 : g.compartido ? (+g.compartido.mio || 0) : g.monto;   // cada quien cuenta solo su parte
+let cuotasCache = [];
+const _gMemo = { a: null, b: null, c: null, v: null };
+const G = () => {   // se recalcula solo cuando cambian los gastos (los arreglos se reemplazan, nunca se mutan)
+  if (_gMemo.a === state.gastos && _gMemo.b === compG && _gMemo.c === cuotasCache) return _gMemo.v;
+  const base = compG.length ? state.gastos.concat(compG) : state.gastos;
+  _gMemo.a = state.gastos; _gMemo.b = compG; _gMemo.c = cuotasCache; _gMemo.v = cuotasCache.length ? base.concat(cuotasCache) : base;
+  return _gMemo.v;
+};
 const nombrePareja = () => pareja ? pareja.email.split('@')[0] : 'tu pareja';
 const vinculado = () => compEstado === 'ok' && !!pareja;
 function aGasto(r){
@@ -1174,11 +1185,12 @@ function renderTrend(){
     vista === 'mes' ? fmtD(s,{month:'short'}).replace('.','') :
     vista === 'semana' ? fmtD(s,{day:'numeric',month:'short'}).replace('.','') :
     fmtD(s,{weekday:'short', day:'numeric'}).replace('.',''));
+  const porBucket = trendBuckets.map(([s,e]) => { const o = {}; enRango(s, e).forEach(g => { o[g.cat] = (o[g.cat] || 0) + cuenta(g); }); return o; });
   const datasets = CATS.map(c => {
     const col = css(c.v);
     return {
       label: c.name,
-      data: trendBuckets.map(([s,e]) => suma(enRango(s,e).filter(g => g.cat === c.id))),
+      data: porBucket.map(o => o[c.id] || 0),
       backgroundColor: trendBuckets.map((_,i) => i === n-1 ? col : col + '66'),
       borderRadius: 4, borderSkipped: false, stack: 's', maxBarThickness: 46,
     };
@@ -1246,7 +1258,30 @@ function renderDonut(porCat, total){
 }
 
 // ---------- render ----------
+// Mensualidades (y comisión) de las compras a MSI o diferidas, como gastos "virtuales" en la fecha de cada corte
+function generarCuotas(){
+  const lejos = new Date(2100, 0, 1), out = [];
+  state.tarjetas.forEach(t => {
+    msiDeGastos(t, lejos).forEach(m => {
+      if (!m.gastoId && !m.planId) return;
+      const gs = m.gastoId ? state.gastos.filter(g => g.id === m.gastoId) : state.gastos.filter(g => g.difPlan === m.planId && g.tarjetaId === t.id);
+      if (!gs.length) return;
+      const base = gs.reduce((a, g) => a + g.monto, 0) || 1;
+      let saldo = m.saldoRef, N = parse(m.corteRef);
+      for (let k = 1; k <= m.total && saldo > 0.005; k++){
+        N = corteSiguiente(t, N);
+        const q = k === m.total ? saldo : Math.min(m.mensualidad, saldo); saldo = r2(saldo - q);
+        gs.forEach(g => out.push({ id: `q:${g.id}:${k}`, virtual: true, srcId: g.id, planId: m.planId || null, monto: r2(q * g.monto / base),
+          cat: g.cat, fecha: iso(N), nota: `${g.nota || (CAT[g.cat] || CAT.otros).name} · pago ${k} de ${m.total}`, metodo: 'credito', tarjetaId: null, tjNombre: nombreTj(t), creado: 0 }));
+        if (k === 1 && m.comision) out.push({ id: `q:${m.id}:com`, virtual: true, srcId: m.gastoId || null, planId: m.planId || null, monto: m.comision,
+          cat: 'tarjeta', fecha: iso(N), nota: `Comisión por diferir · ${m.desc}`, metodo: 'credito', tarjetaId: null, tjNombre: nombreTj(t), creado: 0 });
+      }
+    });
+  });
+  return out;
+}
 function render(){
+  cuotasCache = generarCuotas();
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === vista));
   const [s, e] = rango(vista, ancla);
   const lista = enRango(s, e);
@@ -1360,9 +1395,18 @@ function render(){
         if (tjG) partes.push(nombreTj(tjG) + (g.msiMeses > 1 ? ` · ${g.msiMeses} MSI` : g.diferido ? ` · diferido ${g.diferido.meses} meses (+${money0.format(g.diferido.comision > 0 ? g.diferido.comision : g.diferido.mensualidad * g.diferido.meses - g.monto)})` : (g.difPlan && planDe(g.difPlan)) ? ` · diferido con otras compras (${planDe(g.difPlan).plan.meses} meses)` : ''));
         else if (g.metodo && MET[g.metodo]) partes.push(MET[g.metodo].name);
         if (g.compartido) partes.push(`tu parte ${money.format(g.compartido.mio)}`);
+        if (g.virtual) partes.push(`${g.tjNombre} · mensualidad`);
+        if (financiado(g)){ b.classList.add('fin'); partes.push('suma por mensualidades'); }
         b.querySelector('small').textContent = partes.join(' · ');
         b.querySelector('.m').textContent = money.format(g.monto);
-        b.addEventListener('click', () => abrir(g));
+        if (g.virtual){
+          b.classList.add('cuota');
+          b.addEventListener('click', () => {
+            const pl = g.planId && planDe(g.planId);
+            if (pl) return abrirDiferir(pl.t, pl.plan);
+            const src = state.gastos.find(x => x.id === g.srcId); if (src) abrir(src);
+          });
+        } else b.addEventListener('click', () => abrir(g));
         box.append(b);
       });
     });
