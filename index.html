@@ -334,6 +334,16 @@ details.f > summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 
 .dsel{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:var(--surface-2);font-size:.92rem}
 .dsel b{font-size:1.15rem;font-weight:800}
 
+/* Efectivo aparte */
+.efe{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:var(--surface);border:1px dashed var(--line);margin:-6px 0 18px;max-width:520px}
+.efe[hidden]{display:none}
+.efe .i{font-size:1.4rem}
+.efe div{flex:1;min-width:0}
+.efe small{display:block;color:var(--ink-2);font-size:.8rem}
+.efe strong{font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
+.efe em{font-style:normal;color:var(--ink-2);font-size:.8rem;text-align:right}
+.mov .tagE{display:inline-block;margin-left:6px;font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--ink-2) 16%,transparent);color:var(--ink-2);vertical-align:1px}
+
 /* Pareja */
 .dlg [hidden]{display:none !important}
 .dlg .who{display:flex;gap:8px}
@@ -479,6 +489,7 @@ body.locked .wrap, body.locked .fab{display:none}
     <p class="period" id="periodLabel"></p>
     <p class="total num" id="total"></p>
     <p class="delta" id="delta"></p>
+    <div class="efe" id="efeBox" hidden></div>
     <div class="strip-h"><h2 id="stripTitle">¿En qué se fue?</h2><small id="stripSub"></small></div>
     <div class="strip" id="strip" role="img" aria-label="Reparto por categoría"></div>
     <ul class="strip-leg" id="stripLeg"></ul>
@@ -934,6 +945,8 @@ let pareja = null, miVinculo = null, miEmail = '', compEstado = 'cargando', comp
 const financiado = g => !g.virtual && !!g.tarjetaId && (g.msiMeses > 1 || !!(g.diferido && g.diferido.meses > 0) || !!(g.difPlan && planDe(g.difPlan)));
 const cuenta = g => g.virtual ? g.monto : financiado(g) ? 0 : g.compartido ? (+g.compartido.mio || 0) : g.monto;   // cada quien cuenta solo su parte
 let cuotasCache = [];
+const esEfectivo = g => !g.virtual && g.metodo === 'efectivo';   // el efectivo va aparte: no suma al total del mes
+const sumaT = arr => arr.reduce((a, g) => a + (esEfectivo(g) ? 0 : cuenta(g)), 0);
 const _gMemo = { a: null, b: null, c: null, v: null };
 const G = () => {   // se recalcula solo cuando cambian los gastos (los arreglos se reemplazan, nunca se mutan)
   if (_gMemo.a === state.gastos && _gMemo.b === compG && _gMemo.c === cuotasCache) return _gMemo.v;
@@ -1185,7 +1198,7 @@ function renderTrend(){
     vista === 'mes' ? fmtD(s,{month:'short'}).replace('.','') :
     vista === 'semana' ? fmtD(s,{day:'numeric',month:'short'}).replace('.','') :
     fmtD(s,{weekday:'short', day:'numeric'}).replace('.',''));
-  const porBucket = trendBuckets.map(([s,e]) => { const o = {}; enRango(s, e).forEach(g => { o[g.cat] = (o[g.cat] || 0) + cuenta(g); }); return o; });
+  const porBucket = trendBuckets.map(([s,e]) => { const o = {}; enRango(s, e).forEach(g => { if (!esEfectivo(g)) o[g.cat] = (o[g.cat] || 0) + cuenta(g); }); return o; });
   const datasets = CATS.map(c => {
     const col = css(c.v);
     return {
@@ -1213,7 +1226,7 @@ function renderTrend(){
           filter: i => i.raw > 0,
           callbacks: {
             label: i => ` ${i.dataset.label}: ${money.format(i.raw)}`,
-            footer: items => items.length ? 'Total: ' + money.format(trendBuckets[items[0].dataIndex] ? suma(enRango(...trendBuckets[items[0].dataIndex])) : 0) : ''
+            footer: items => items.length ? 'Total: ' + money.format(trendBuckets[items[0].dataIndex] ? sumaT(enRango(...trendBuckets[items[0].dataIndex])) : 0) : ''
           }
         }
       },
@@ -1285,9 +1298,13 @@ function render(){
   document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === vista));
   const [s, e] = rango(vista, ancla);
   const lista = enRango(s, e);
-  const total = suma(lista);
+  const total = sumaT(lista);                       // sin efectivo
+  const listaEf = lista.filter(esEfectivo);
+  const efectivo = suma(listaEf);
+  const totalTodo = suma(lista);                    // con efectivo (para categorías y presupuestos)
   const [ps, pe] = rango(vista, addP(vista, s, -1));
-  const prevTotal = suma(enRango(ps, pe));
+  const prevLista = enRango(ps, pe);
+  const prevTotal = sumaT(prevLista), prevEf = suma(prevLista.filter(esEfectivo));
 
   $('#periodLabel').textContent = etiqueta(vista, s, e);
   const [ent, dec] = money.format(total).split('.');
@@ -1302,13 +1319,22 @@ function render(){
     b.textContent = pct === 0 ? 'Igual' : (pct > 0 ? '▲ ' : '▼ ') + Math.abs(pct) + '% ' + (pct > 0 ? 'más' : 'menos');
     delta.append(b, ` que ${prevName[vista]} (${money.format(prevTotal)})`);
   } else if (total > 0){
-    delta.textContent = `${lista.length} ${lista.length === 1 ? 'gasto' : 'gastos'} este ${periodWord[vista]}`;
+    const n = lista.length - listaEf.length;
+    delta.textContent = `${n} ${n === 1 ? 'gasto' : 'gastos'} este ${periodWord[vista]}`;
   } else {
-    delta.textContent = prevTotal > 0 ? `${prevName[vista].charAt(0).toUpperCase()+prevName[vista].slice(1)} gastaste ${money.format(prevTotal)}` : 'Registra tus gastos para ver cómo se reparten';
+    delta.textContent = prevTotal > 0 ? `${prevName[vista].charAt(0).toUpperCase()+prevName[vista].slice(1)} gastaste ${money.format(prevTotal)}` : (efectivo > 0 ? `Sin gastos con tarjeta o banco este ${periodWord[vista]}` : 'Registra tus gastos para ver cómo se reparten');
+  }
+  const efe = $('#efeBox'); efe.innerHTML = ''; efe.hidden = !(efectivo > 0 || prevEf > 0);
+  if (!efe.hidden){
+    efe.innerHTML = '<span class="i">💵</span><div><small>Gastado en efectivo · no suma al total</small><strong class="num"></strong></div><em class="num"></em>';
+    efe.querySelector('strong').textContent = money.format(efectivo);
+    efe.querySelector('em').textContent = efectivo > 0 ? `${listaEf.length} ${listaEf.length === 1 ? 'gasto' : 'gastos'}` + (prevEf > 0 ? `\n${prevName[vista]}: ${money0.format(prevEf)}` : '') : `${prevName[vista]}: ${money0.format(prevEf)}`;
+    efe.querySelector('em').style.whiteSpace = 'pre-line';
   }
 
-  const porCat = Object.fromEntries(CATS.map(c => [c.id, 0]));
-  lista.forEach(g => { porCat[g.cat] = (porCat[g.cat]||0) + cuenta(g); });
+  const porCat = Object.fromEntries(CATS.map(c => [c.id, 0]));      // sin efectivo: barra y dona
+  const porCatTodo = Object.fromEntries(CATS.map(c => [c.id, 0]));  // con efectivo: categorías y presupuestos
+  lista.forEach(g => { porCatTodo[g.cat] = (porCatTodo[g.cat]||0) + cuenta(g); if (!esEfectivo(g)) porCat[g.cat] = (porCat[g.cat]||0) + cuenta(g); });
 
   // strip
   const strip = $('#strip'); strip.innerHTML = '';
@@ -1344,10 +1370,10 @@ function render(){
   const f = factorPresupuesto(vista, s);
   const ul = $('#cats'); ul.innerHTML = '';
   const tieneBudget = CATS.some(c => state.presupuestos[c.id] > 0);
-  $('#catSub').textContent = tieneBudget ? `Gastado contra presupuesto del ${periodWord[vista]}` : 'Define presupuestos para ver cuánto te queda';
-  const maxCat = Math.max(...CATS.map(c => porCat[c.id]), 1);
+  $('#catSub').textContent = (tieneBudget ? `Gastado contra presupuesto del ${periodWord[vista]}` : 'Define presupuestos para ver cuánto te queda') + (efectivo > 0 ? ' · incluye efectivo' : '');
+  const maxCat = Math.max(...CATS.map(c => porCatTodo[c.id]), 1);
   CATS.forEach(c => {
-    const gast = porCat[c.id];
+    const gast = porCatTodo[c.id];
     const pres = (state.presupuestos[c.id]||0) * f;
     const li = document.createElement('li'); li.className = 'cat';
     const col = `var(${c.v})`;
@@ -1358,7 +1384,7 @@ function render(){
       const rest = pres - gast;
       over = rest < 0;
       meta = over ? `Te pasaste por ${money.format(-rest)} de ${money.format(pres)}` : `Quedan ${money.format(rest)} de ${money.format(pres)}`;
-    } else meta = total > 0 ? `${Math.round(gast/total*100)}% del ${periodWord[vista]}` : '—';
+    } else meta = totalTodo > 0 ? `${Math.round(gast/totalTodo*100)}% del ${periodWord[vista]}` : '—';
     li.innerHTML = `<span class="ico" style="background:color-mix(in srgb, ${col} 18%, transparent)">${c.ico}</span>
       <span class="name"></span><span class="amt num"></span>
       <span class="bar"><i style="width:${pct}%;background:${over ? 'var(--up)' : col}"></i></span>
@@ -1380,7 +1406,8 @@ function render(){
     Object.entries(byDay).forEach(([fecha, arr]) => {
       const h = document.createElement('div'); h.className = 'day-h';
       const t = fmtD(parse(fecha), {weekday:'long', day:'numeric', month:'short'});
-      h.textContent = `${t.charAt(0).toUpperCase()+t.slice(1)} · ${money.format(suma(arr))}`;
+      const efD = suma(arr.filter(esEfectivo));
+      h.textContent = `${t.charAt(0).toUpperCase()+t.slice(1)} · ${money.format(sumaT(arr))}${efD > 0 ? ` (+ ${money.format(efD)} en efectivo)` : ''}`;
       box.append(h);
       arr.forEach(g => {
         const c = CAT[g.cat] || CAT.otros;
@@ -1396,6 +1423,7 @@ function render(){
         else if (g.metodo && MET[g.metodo]) partes.push(MET[g.metodo].name);
         if (g.compartido) partes.push(`tu parte ${money.format(g.compartido.mio)}`);
         if (g.virtual) partes.push(`${g.tjNombre} · mensualidad`);
+        if (esEfectivo(g)) b.querySelector('b').append(Object.assign(document.createElement('span'), {className:'tagE', textContent:'💵 aparte'}));
         if (financiado(g)){ b.classList.add('fin'); partes.push('suma por mensualidades'); }
         b.querySelector('small').textContent = partes.join(' · ');
         b.querySelector('.m').textContent = money.format(g.monto);
